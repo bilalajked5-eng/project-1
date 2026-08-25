@@ -68,8 +68,8 @@ export function Solutions({ hideHeading }: { hideHeading?: boolean } = {}) {
                 <span
                   aria-hidden="true"
                   className={cn(
-                    'pointer-events-none absolute -top-8 end-0 select-none font-display text-[6rem] font-semibold leading-none',
-                    'transition-all duration-700 ease-premium sm:text-[7.5rem]',
+                    'pointer-events-none absolute -top-8 end-0 select-none font-display text-[4.75rem] font-semibold leading-none',
+                    'transition-all duration-700 ease-premium sm:text-[6rem]',
                     isActive ? 'text-brand-500/[0.055]' : 'text-sand-900/[0.025]',
                   )}
                 >

@@ -74,11 +74,11 @@ export default {
 
       fontSize: {
         /* Editorial scale — clamped so it breathes from 375px to 1920px */
-        'display-2xl': ['clamp(2.625rem, 1.75rem + 3.9vw, 5.25rem)', { lineHeight: '0.98', letterSpacing: '-0.035em', fontWeight: '600' }],
-        'display-xl': ['clamp(2.125rem, 1.55rem + 2.55vw, 3.625rem)', { lineHeight: '1.03', letterSpacing: '-0.03em', fontWeight: '600' }],
-        'display-lg': ['clamp(1.875rem, 1.45rem + 1.9vw, 2.875rem)', { lineHeight: '1.08', letterSpacing: '-0.025em', fontWeight: '600' }],
-        'display-md': ['clamp(1.5rem, 1.2rem + 1.35vw, 2.125rem)', { lineHeight: '1.15', letterSpacing: '-0.02em', fontWeight: '600' }],
-        'display-sm': ['clamp(1.35rem, 1.15rem + 0.9vw, 1.875rem)', { lineHeight: '1.25', letterSpacing: '-0.015em', fontWeight: '600' }],
+        'display-2xl': ['clamp(2.25rem, 1.6rem + 2.9vw, 4.25rem)', { lineHeight: '1.05', letterSpacing: '-0.025em', fontWeight: '600' }],
+        'display-xl': ['clamp(1.875rem, 1.5rem + 1.7vw, 3rem)', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '600' }],
+        'display-lg': ['clamp(1.625rem, 1.36rem + 1.18vw, 2.375rem)', { lineHeight: '1.16', letterSpacing: '-0.018em', fontWeight: '600' }],
+        'display-md': ['clamp(1.375rem, 1.2rem + 0.78vw, 1.75rem)', { lineHeight: '1.24', letterSpacing: '-0.014em', fontWeight: '600' }],
+        'display-sm': ['clamp(1.25rem, 1.13rem + 0.53vw, 1.5rem)', { lineHeight: '1.32', letterSpacing: '-0.01em', fontWeight: '600' }],
         'body-xl': ['clamp(1.125rem, 1.05rem + 0.35vw, 1.375rem)', { lineHeight: '1.6', letterSpacing: '-0.005em' }],
         'body-lg': ['1.0625rem', { lineHeight: '1.65' }],
         'body': ['1rem', { lineHeight: '1.7' }],

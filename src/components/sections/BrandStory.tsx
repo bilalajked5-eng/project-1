@@ -55,7 +55,7 @@ export function BrandStory() {
 
       {/* ── The lockup ── */}
       <Reveal delay={200}>
-        <div className="relative mt-16 flex min-h-[clamp(4.5rem,12vw,10rem)] items-center justify-center lg:mt-20">
+        <div className="relative mt-16 flex min-h-[clamp(3.75rem,9.5vw,7.5rem)] items-center justify-center lg:mt-20">
           {/* Glow that tracks the active pillar */}
           <div
             aria-hidden="true"
@@ -70,7 +70,7 @@ export function BrandStory() {
           <p
             aria-hidden={isThird}
             className={cn(
-              'absolute select-none font-display text-[clamp(2.75rem,11vw,8rem)] font-semibold leading-none tracking-tight',
+              'absolute select-none font-display text-[clamp(2.25rem,8.5vw,6rem)] font-semibold leading-none tracking-tight',
               'transition-all duration-700 ease-premium',
               isThird ? 'scale-95 opacity-0 blur-sm' : 'scale-100 opacity-100 blur-0',
             )}
@@ -94,7 +94,7 @@ export function BrandStory() {
           <p
             aria-hidden={!isThird}
             className={cn(
-              'absolute select-none font-display text-[clamp(2.75rem,11vw,8rem)] font-semibold leading-none tracking-tight',
+              'absolute select-none font-display text-[clamp(2.25rem,8.5vw,6rem)] font-semibold leading-none tracking-tight',
               'transition-all duration-700 ease-premium',
               isThird
                 ? 'scale-100 text-white opacity-100 blur-0 [text-shadow:0_0_46px_rgb(var(--glow)/0.55)]'
