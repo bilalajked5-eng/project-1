@@ -1,0 +1,232 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ══════════════════════════════════════════════════════════════════════
+   BRAND TOKENS — single source of truth for the Atmaal palette.
+   Values are space-separated RGB channels so Tailwind opacity modifiers
+   (e.g. `bg-brand-500/10`) work against them.
+
+   ▸ TO APPLY THE OFFICIAL BRAND GUIDE: replace the channel values in the
+     `--brand-*` (primary) and `--azure-*` (secondary) ramps below. Nothing
+     else in the codebase hard-codes a brand colour, so a swap here
+     propagates to every button, gradient, chart, icon and hover state.
+   ▸ Convert a hex to channels: #00937F → `0 147 127`.
+   ══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Primary brand — teal/green. Used for CTAs, highlights, data viz. */
+  --brand-50: 234 248 245;
+  --brand-100: 204 237 231;
+  --brand-200: 153 219 207;
+  --brand-300: 95 197 180;
+  --brand-400: 43 172 152;
+  --brand-500: 0 147 127;
+  --brand-600: 0 123 107;
+  --brand-700: 3 99 86;
+  --brand-800: 8 76 67;
+  --brand-900: 10 60 54;
+
+  /* Secondary brand — deep corporate blue. Structure, depth, accents. */
+  --azure-50: 237 244 250;
+  --azure-100: 211 228 242;
+  --azure-200: 167 200 228;
+  --azure-300: 111 165 207;
+  --azure-400: 59 128 180;
+  --azure-500: 26 99 150;
+  --azure-600: 16 80 124;
+  --azure-700: 16 58 94;
+  --azure-800: 13 46 74;
+  --azure-900: 10 35 56;
+
+  /* Dark corporate ground */
+  --ink-950: 4 16 28;
+  --ink-900: 7 24 42;
+  --ink-800: 12 35 56;
+  --ink-700: 20 48 71;
+  --ink-600: 30 64 89;
+
+  /* Neutrals */
+  --sand-25: 252 253 253;
+  --sand-50: 247 249 250;
+  --sand-100: 239 242 244;
+  --sand-200: 226 231 235;
+  --sand-300: 203 211 218;
+  --sand-400: 138 152 164;  /* decorative / non-text use only */
+  --sand-500: 95 109 121;   /* 5.3:1 on white, 5.0:1 on sand-50 */
+  --sand-600: 82 97 109;
+  --sand-700: 61 74 84;
+  --sand-800: 42 52 60;
+  --sand-900: 26 33 40;
+
+  /* Luminous accent for glows and data lines */
+  --glow: 53 208 180;
+
+  /* Typography — Arabic swaps --font-body/--font-display via [dir="rtl"] */
+  --font-display: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+
+  --header-h: 76px;
+}
+
+[dir='rtl'] {
+  --font-display: 'IBM Plex Sans Arabic', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'IBM Plex Sans Arabic', 'Segoe UI', system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-sand-200;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-h) + 16px);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-white text-ink-900 font-sans antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'ss01' 1, 'cv01' 1;
+    overflow-x: hidden;
+  }
+
+  /* Arabic needs more leading; tracking is corrected in @layer utilities
+     below, where it can out-specify Tailwind's fontSize utilities. */
+  [dir='rtl'] body {
+    font-feature-settings: normal;
+    line-height: 1.85;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-balance;
+  }
+
+  /* Visible, on-brand focus ring for keyboard users only */
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white rounded-[4px];
+  }
+
+  .on-dark :focus-visible {
+    @apply ring-glow ring-offset-ink-950;
+  }
+
+  ::selection {
+    @apply bg-brand-500/20 text-ink-900;
+  }
+}
+
+@layer components {
+  /* Page shell — consistent gutters at every breakpoint */
+  .shell {
+    @apply mx-auto w-full max-w-shell px-gutter;
+  }
+
+  .shell-narrow {
+    @apply mx-auto w-full max-w-content px-gutter;
+  }
+
+  /* Hairline rule that reads as precision rather than decoration */
+  .hairline {
+    @apply border-t border-sand-200;
+  }
+
+  .on-dark .hairline {
+    @apply border-white/10;
+  }
+}
+
+@layer utilities {
+  /* ── Arabic typography correction ──────────────────────────────────────
+     Tailwind's `text-display-*` utilities carry negative tracking and very
+     tight leading, both tuned for Latin display type. Applied to Arabic they
+     crowd the glyphs and clip ascenders. These selectors are deliberately one
+     step more specific than the utilities they override, and live in the same
+     layer so they win on specificity rather than on !important. */
+  [dir='rtl'] :is(h1, h2, h3, h4, h5, h6),
+  [dir='rtl'] .font-display {
+    letter-spacing: 0;
+  }
+
+  [dir='rtl'] :is(h1, h2) {
+    line-height: 1.32;
+  }
+
+  [dir='rtl'] :is(h3, h4, h5, h6) {
+    line-height: 1.42;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Logical-property helpers so RTL mirrors without duplicated rules */
+  .border-inline-start {
+    border-inline-start-width: 1px;
+  }
+
+  .pad-inline-start {
+    padding-inline-start: 1.5rem;
+  }
+
+  /* Directional arrow: flips with the writing direction */
+  .rtl-flip {
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  [dir='rtl'] .rtl-flip {
+    transform: scaleX(-1);
+  }
+
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+  }
+
+  .mask-fade-edges {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  }
+}
+
+/* ── Motion: everything below collapses under prefers-reduced-motion ── */
+
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0);
+  transition:
+    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.reveal[data-visible='true'] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
