@@ -14,21 +14,24 @@ import { cn } from '@/lib/cn'
  * the panel's index number, rule and icon respond — so pointer users get the
  * reveal and everyone gets the content.
  */
-export function Solutions() {
+export function Solutions({ hideHeading }: { hideHeading?: boolean } = {}) {
   const t = useT()
   const [active, setActive] = useState<string | null>(null)
+  const ItemHeading = hideHeading ? 'h2' : 'h3'
 
   return (
-    <Section id="solutions" tone="tint" aria-labelledby="solutions-heading">
-      <SectionHeading
-        id="solutions-heading"
-        eyebrow={t.solutions.eyebrow}
-        title={t.solutions.heading}
-        intro={t.solutions.intro}
-        size="xl"
-      />
+    <Section id="solutions" tone="tint" aria-labelledby={hideHeading ? undefined : "solutions-heading"}>
+      {!hideHeading && (
+        <SectionHeading
+          id="solutions-heading"
+          eyebrow={t.solutions.eyebrow}
+          title={t.solutions.heading}
+          intro={t.solutions.intro}
+          size="xl"
+        />
+      )}
 
-      <div className="mt-16 space-y-5 lg:mt-20">
+      <div className={cn('space-y-5', hideHeading ? 'mt-0' : 'mt-16 lg:mt-20')}>
         {t.solutions.items.map((item, i) => {
           const Icon = solutionIcons[item.id as keyof typeof solutionIcons]
           const isActive = active === item.id
@@ -54,7 +57,7 @@ export function Solutions() {
                 <span
                   aria-hidden="true"
                   className={cn(
-                    'absolute inset-y-0 start-0 w-[3px] origin-top bg-gradient-to-b from-brand-500 to-azure-600',
+                    'absolute inset-y-0 start-0 w-[3px] origin-top bg-gradient-to-b from-brand-500 to-lime-600',
                     'transition-transform duration-700 ease-premium',
                     isActive ? 'scale-y-100' : 'scale-y-0',
                   )}
@@ -92,7 +95,7 @@ export function Solutions() {
                       </span>
                     </div>
 
-                    <h3 className="mt-6 text-display-sm text-ink-900">{item.title}</h3>
+                    <ItemHeading className="mt-6 text-display-sm text-ink-900">{item.title}</ItemHeading>
                     <p className="mt-3 text-body-lg font-medium text-brand-700 text-pretty">
                       {item.tagline}
                     </p>

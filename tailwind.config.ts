@@ -38,17 +38,17 @@ export default {
           900: channel('--brand-900'),
         },
         /* Secondary brand */
-        azure: {
-          50: channel('--azure-50'),
-          100: channel('--azure-100'),
-          200: channel('--azure-200'),
-          300: channel('--azure-300'),
-          400: channel('--azure-400'),
-          500: channel('--azure-500'),
-          600: channel('--azure-600'),
-          700: channel('--azure-700'),
-          800: channel('--azure-800'),
-          900: channel('--azure-900'),
+        lime: {
+          50: channel('--lime-50'),
+          100: channel('--lime-100'),
+          200: channel('--lime-200'),
+          300: channel('--lime-300'),
+          400: channel('--lime-400'),
+          500: channel('--lime-500'),
+          600: channel('--lime-600'),
+          700: channel('--lime-700'),
+          800: channel('--lime-800'),
+          900: channel('--lime-900'),
         },
         /* Neutral surfaces and text */
         sand: {

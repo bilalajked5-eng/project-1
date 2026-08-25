@@ -38,7 +38,7 @@ export function NetworkVisual({ className }: { className?: string }) {
       <defs>
         <linearGradient id="nv-link" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="rgb(var(--brand-400))" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="rgb(var(--azure-400))" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="rgb(var(--lime-400))" stopOpacity="0.18" />
         </linearGradient>
         <radialGradient id="nv-vignette" cx="50%" cy="45%">
           <stop offset="0%" stopColor="#fff" stopOpacity="0.85" />
@@ -94,8 +94,8 @@ export function DataLines({ className }: { className?: string }) {
         <linearGradient id="dl-grad" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0%" stopColor="rgb(var(--brand-500))" stopOpacity="0" />
           <stop offset="35%" stopColor="rgb(var(--brand-500))" stopOpacity="0.5" />
-          <stop offset="65%" stopColor="rgb(var(--azure-500))" stopOpacity="0.45" />
-          <stop offset="100%" stopColor="rgb(var(--azure-500))" stopOpacity="0" />
+          <stop offset="65%" stopColor="rgb(var(--lime-500))" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="rgb(var(--lime-500))" stopOpacity="0" />
         </linearGradient>
       </defs>
       {paths.map((d, i) => (

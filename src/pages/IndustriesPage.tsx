@@ -15,7 +15,7 @@ export function IndustriesPage() {
   return (
     <>
       <PageHero eyebrow={t.industries.eyebrow} title={page.hero} lede={page.lede} />
-      <Industries tone="light" />
+      <Industries tone="light" hideHeading />
       <WhyAtmaal />
       <CaseStudies />
       <ContactCTA withForm={false} />

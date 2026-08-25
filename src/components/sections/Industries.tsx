@@ -3,6 +3,7 @@ import { Section, SectionHeading } from '@/components/ui/Section'
 import { Reveal } from '@/components/ui/Reveal'
 import { CardAccent } from '@/components/ui/Card'
 import { industryIcons } from '@/components/ui/Icons'
+import { cn } from '@/lib/cn'
 
 /**
  * Industry grid.
@@ -12,20 +13,23 @@ import { industryIcons } from '@/components/ui/Icons'
  * telecommunications, insurance, e-commerce, enterprise services). No client
  * names or sector claims beyond published positioning.
  */
-export function Industries({ tone = 'tint' }: { tone?: 'light' | 'tint' }) {
+export function Industries({ tone = 'tint', hideHeading }: { tone?: 'light' | 'tint'; hideHeading?: boolean }) {
   const t = useT()
+  const ItemHeading = hideHeading ? 'h2' : 'h3'
 
   return (
-    <Section id="industries" tone={tone} aria-labelledby="industries-heading">
-      <SectionHeading
-        id="industries-heading"
-        eyebrow={t.industries.eyebrow}
-        title={t.industries.heading}
-        intro={t.industries.intro}
-        size="xl"
-      />
+    <Section id="industries" tone={tone} aria-labelledby={hideHeading ? undefined : "industries-heading"}>
+      {!hideHeading && (
+        <SectionHeading
+          id="industries-heading"
+          eyebrow={t.industries.eyebrow}
+          title={t.industries.heading}
+          intro={t.industries.intro}
+          size="xl"
+        />
+      )}
 
-      <ul className="mt-16 grid gap-4 sm:grid-cols-2 lg:mt-20 lg:grid-cols-4">
+      <ul className={cn('grid gap-4 sm:grid-cols-2 lg:grid-cols-4', hideHeading ? 'mt-0' : 'mt-16 lg:mt-20')}>
         {t.industries.items.map((item, i) => {
           const Icon = industryIcons[item.id as keyof typeof industryIcons]
 
@@ -47,9 +51,9 @@ export function Industries({ tone = 'tint' }: { tone?: 'light' | 'tint' }) {
                   <Icon className="h-5 w-5" />
                 </span>
 
-                <h3 className="relative mt-6 font-display text-body-lg font-semibold text-ink-900">
+                <ItemHeading className="relative mt-6 font-display text-body-lg font-semibold text-ink-900">
                   {item.title}
-                </h3>
+                </ItemHeading>
                 <p className="relative mt-3 text-body-sm leading-relaxed text-sand-600">
                   {item.body}
                 </p>

@@ -23,7 +23,7 @@ export function CareersPage() {
         </div>
       </PageHero>
       <Metrics />
-      <Careers />
+      <Careers hideHeading />
       <WhyAtmaal />
       <ContactCTA withForm={false} />
     </>

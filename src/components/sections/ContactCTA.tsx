@@ -5,9 +5,10 @@ import { Eyebrow } from '@/components/ui/Section'
 import { IconMail, IconPin, IconBriefcase } from '@/components/ui/Icons'
 import { NetworkVisual } from '@/components/visuals/NetworkVisual'
 import { ContactForm } from './ContactForm'
+import { cn } from '@/lib/cn'
 
 /** High-impact closing CTA with the verified contact details and the form. */
-export function ContactCTA({ withForm = true }: { withForm?: boolean }) {
+export function ContactCTA({ withForm = true, hideHeading }: { withForm?: boolean; hideHeading?: boolean }) {
   const t = useT()
 
   const details = [
@@ -24,7 +25,7 @@ export function ContactCTA({ withForm = true }: { withForm?: boolean }) {
   return (
     <section
       id="contact"
-      aria-labelledby="contact-heading"
+      aria-labelledby={hideHeading ? undefined : "contact-heading"}
       className="on-dark relative isolate overflow-hidden bg-ink-950 py-section text-white"
     >
       <NetworkVisual className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-40" />
@@ -34,29 +35,33 @@ export function ContactCTA({ withForm = true }: { withForm?: boolean }) {
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_60%_at_92%_100%,rgb(var(--azure-700)/0.45),transparent_60%)]"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_60%_at_92%_100%,rgb(var(--lime-700)/0.45),transparent_60%)]"
       />
 
       <div className="shell relative">
         <div className="grid gap-14 lg:grid-cols-12 lg:gap-16">
           {/* Statement */}
           <div className="lg:col-span-5">
-            <Reveal>
-              <Eyebrow onDark>{t.contact.eyebrow}</Eyebrow>
-            </Reveal>
+            {!hideHeading && (
+              <>
+                <Reveal>
+                  <Eyebrow onDark>{t.contact.eyebrow}</Eyebrow>
+                </Reveal>
 
-            <Reveal delay={70}>
-              <h2 id="contact-heading" className="mt-6 text-display-lg text-white">
-                {t.contact.heading}
-              </h2>
-            </Reveal>
+                <Reveal delay={70}>
+                  <h2 id="contact-heading" className="mt-6 text-display-lg text-white">
+                    {t.contact.heading}
+                  </h2>
+                </Reveal>
 
-            <Reveal delay={140}>
-              <p className="mt-6 text-body-xl text-white/65 text-pretty">{t.contact.sub}</p>
-            </Reveal>
+                <Reveal delay={140}>
+                  <p className="mt-6 text-body-xl text-white/65 text-pretty">{t.contact.sub}</p>
+                </Reveal>
+              </>
+            )}
 
             <Reveal delay={210}>
-              <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
+              <div className={cn('flex flex-col gap-3 sm:flex-row sm:gap-4', hideHeading ? 'mt-0' : 'mt-10')}>
                 <LinkButton to="/contact" variant="onDark" size="lg" arrow>
                   {t.cta.talkToExpert}
                 </LinkButton>
@@ -102,7 +107,7 @@ export function ContactCTA({ withForm = true }: { withForm?: boolean }) {
           {withForm && (
             <div className="lg:col-span-7">
               <Reveal delay={180}>
-                <ContactForm />
+                <ContactForm headingLevel={hideHeading ? 'h2' : 'h3'} />
               </Reveal>
             </div>
           )}

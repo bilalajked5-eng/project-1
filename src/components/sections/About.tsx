@@ -5,12 +5,12 @@ import { Figure } from '@/components/visuals/Figure'
 import { cn } from '@/lib/cn'
 
 /** Company introduction, plus vision and mission as a paired statement. */
-export function About({ headingLevel = 'h2' }: { headingLevel?: 'h1' | 'h2' }) {
+export function About({ headingLevel = 'h2', hideHeading }: { headingLevel?: 'h1' | 'h2'; hideHeading?: boolean }) {
   const t = useT()
   const Heading = headingLevel
 
   return (
-    <Section id="about" aria-labelledby="about-heading">
+    <Section id="about" aria-labelledby={hideHeading ? undefined : "about-heading"}>
       <div className="grid gap-14 lg:grid-cols-12 lg:gap-14">
         {/* Image column */}
         <div className="lg:col-span-5">
@@ -44,18 +44,22 @@ export function About({ headingLevel = 'h2' }: { headingLevel?: 'h1' | 'h2' }) {
 
         {/* Copy column */}
         <div className="lg:col-span-7 lg:ps-4">
-          <Reveal>
-            <Eyebrow>{t.about.eyebrow}</Eyebrow>
-          </Reveal>
+          {!hideHeading && (
+            <>
+              <Reveal>
+                <Eyebrow>{t.about.eyebrow}</Eyebrow>
+              </Reveal>
 
-          <Reveal delay={70}>
-            <Heading id="about-heading" className="mt-6 text-display-lg text-ink-900">
-              {t.about.heading}
-            </Heading>
-          </Reveal>
+              <Reveal delay={70}>
+                <Heading id="about-heading" className="mt-6 text-display-lg text-ink-900">
+                  {t.about.heading}
+                </Heading>
+              </Reveal>
+            </>
+          )}
 
           <Reveal delay={140}>
-            <p className="mt-7 text-body-xl font-medium text-ink-800 text-pretty">{t.about.lead}</p>
+            <p className={cn('text-body-xl font-medium text-ink-800 text-pretty', hideHeading ? 'mt-0' : 'mt-7')}>{t.about.lead}</p>
           </Reveal>
 
           <div className="mt-6 space-y-5">

@@ -18,7 +18,7 @@ export function AboutPage() {
       <PageHero eyebrow={t.about.eyebrow} title={page.hero} lede={page.lede} />
       <Metrics />
       <div id="story">
-        <About />
+        <About hideHeading />
       </div>
       <BrandStory />
       <WhyAtmaal />

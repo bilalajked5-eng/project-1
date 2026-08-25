@@ -15,7 +15,7 @@ export function TechnologyPage() {
   return (
     <>
       <PageHero eyebrow={t.technology.eyebrow} title={page.hero} lede={page.lede} />
-      <Technology />
+      <Technology hideHeading />
       <Process />
       <BrandStory />
       <ContactCTA withForm={false} />

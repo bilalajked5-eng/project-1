@@ -43,7 +43,7 @@ export function CardAccent({ className }: { className?: string }) {
       aria-hidden="true"
       className={cn(
         'pointer-events-none absolute inset-x-0 top-0 h-px origin-left scale-x-0',
-        'bg-gradient-to-r from-brand-500 via-brand-400 to-azure-500',
+        'bg-gradient-to-r from-brand-500 via-brand-400 to-lime-500',
         'transition-transform duration-700 ease-premium group-hover:scale-x-100',
         className,
       )}

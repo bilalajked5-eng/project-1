@@ -21,10 +21,11 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
  * input via aria-describedby and announced politely, and the success message
  * takes focus so it is not missed by screen-reader users.
  */
-export function ContactForm() {
+export function ContactForm({ headingLevel = 'h3' }: { headingLevel?: 'h2' | 'h3' } = {}) {
   const t = useT()
   const f = t.contact.form
   const uid = useId()
+  const Heading = headingLevel
   const [errors, setErrors] = useState<Errors>({})
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
 
@@ -108,7 +109,7 @@ export function ContactForm() {
       noValidate
       className="rounded-panel bg-white/[0.05] p-7 ring-1 ring-white/12 backdrop-blur-xl sm:p-9"
     >
-      <h3 className="font-display text-display-sm text-white">{f.title}</h3>
+      <Heading className="font-display text-display-sm text-white">{f.title}</Heading>
       <p className="mt-2.5 text-body-sm text-white/55">{f.note}</p>
 
       <div className="mt-8 grid gap-5 sm:grid-cols-2">

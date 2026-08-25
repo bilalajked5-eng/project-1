@@ -72,14 +72,14 @@ export function Figure({
 function AbstractPanel({ pattern, label }: { pattern: NonNullable<FigureProps['pattern']>; label: string }) {
   return (
     <div className="absolute inset-0">
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgb(var(--azure-800)),rgb(var(--ink-950))_55%,rgb(var(--brand-900)))]" />
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgb(var(--lime-800)),rgb(var(--ink-950))_55%,rgb(var(--brand-900)))]" />
       <div className="absolute inset-0 bg-grid-dark [background-size:34px_34px] opacity-40" />
 
       <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full" aria-hidden="true">
         <defs>
           <linearGradient id={`fp-${pattern}`} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="rgb(var(--glow))" stopOpacity="0.85" />
-            <stop offset="100%" stopColor="rgb(var(--azure-400))" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="rgb(var(--lime-400))" stopOpacity="0.2" />
           </linearGradient>
         </defs>
 
@@ -168,7 +168,7 @@ function AbstractPanel({ pattern, label }: { pattern: NonNullable<FigureProps['p
             <path
               d="M20 250 C 90 250, 120 200, 190 200 S 270 168, 330 168 384 140, 390 140"
               fill="none"
-              stroke="rgb(var(--azure-300))"
+              stroke="rgb(var(--lime-300))"
               strokeOpacity="0.35"
               strokeWidth="1.4"
             />

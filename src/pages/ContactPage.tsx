@@ -12,7 +12,7 @@ export function ContactPage() {
   return (
     <>
       <PageHero eyebrow={t.contact.eyebrow} title={page.hero} lede={page.lede} />
-      <ContactCTA />
+      <ContactCTA hideHeading />
     </>
   )
 }

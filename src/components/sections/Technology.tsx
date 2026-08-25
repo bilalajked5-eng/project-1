@@ -11,11 +11,12 @@ import { cn } from '@/lib/cn'
  * rail on desktop and stacks vertically on mobile, with the connecting line
  * redrawn per axis rather than rotated.
  */
-export function Technology() {
+export function Technology({ hideHeading }: { hideHeading?: boolean } = {}) {
   const t = useT()
+  const CapHeading = hideHeading ? 'h2' : 'h3'
 
   return (
-    <Section tone="dark" aria-labelledby="technology-heading" className="overflow-hidden">
+    <Section tone="dark" aria-labelledby={hideHeading ? undefined : "technology-heading"} className="overflow-hidden">
       {/* Ambient field */}
       <NetworkVisual className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-[0.55]" />
       <div
@@ -23,19 +24,21 @@ export function Technology() {
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_90%_70%_at_50%_110%,rgb(var(--brand-700)/0.42),transparent_60%)]"
       />
 
-      <SectionHeading
-        id="technology-heading"
-        eyebrow={t.technology.eyebrow}
-        title={t.technology.heading}
-        intro={t.technology.body}
-        onDark
-        align="center"
-        size="xl"
-        className="mx-auto"
-      />
+      {!hideHeading && (
+        <SectionHeading
+          id="technology-heading"
+          eyebrow={t.technology.eyebrow}
+          title={t.technology.heading}
+          intro={t.technology.body}
+          onDark
+          align="center"
+          size="xl"
+          className="mx-auto"
+        />
+      )}
 
       {/* Capabilities */}
-      <ul className="mt-16 grid gap-4 sm:grid-cols-2 lg:mt-20 lg:grid-cols-5">
+      <ul className={cn('grid gap-4 sm:grid-cols-2 lg:grid-cols-5', hideHeading ? 'mt-0' : 'mt-16 lg:mt-20')}>
         {t.technology.capabilities.map((cap, i) => (
           <Reveal key={cap.title} delay={i * 80} as="li" className="h-full">
             <div
@@ -48,9 +51,9 @@ export function Technology() {
                 aria-hidden="true"
                 className="block h-px w-9 bg-gradient-to-r from-brand-400 to-transparent transition-all duration-600 ease-premium group-hover:w-full"
               />
-              <h3 className="mt-5 font-display text-body-lg font-semibold text-white">
+              <CapHeading className="mt-5 font-display text-body-lg font-semibold text-white">
                 {cap.title}
-              </h3>
+              </CapHeading>
               <p className="mt-2.5 text-body-sm leading-relaxed text-white/55">{cap.body}</p>
             </div>
           </Reveal>

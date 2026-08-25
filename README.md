@@ -20,31 +20,41 @@ npm run typecheck
 Everything below is isolated to one place on purpose. None of it requires
 touching component code.
 
-### 1. Brand colours — `src/styles/globals.css`
+### 1. Logo artwork — `public/images/`
 
-The palette is defined once, as RGB channel triplets, in the `BRAND TOKENS`
-block at the top of that file. Replace the `--brand-*` (primary) and
-`--azure-*` (secondary) ramps with the exact values from the Atmaal brand
-guide and the change propagates to every button, gradient, icon, hover state
-and data visualisation.
+The wordmark files shipped here are a **redraw** of the supplied asset —
+correct in colour and proportion, but not the original outlines. Replace both
+files with the master artwork before launch:
 
-Convert a hex to channels: `#00937F` → `0 147 127`.
+| File | Used on |
+|---|---|
+| `atmaal-logo.svg` | light grounds (header, light sections) |
+| `atmaal-logo-light.svg` | dark grounds (mobile menu, footer) |
 
-> **Assumption made:** the live site at `atmaal.sa` was unreachable from the
-> build environment (blocked by network egress policy), so the exact brand
-> hexes could not be sampled. The current ramps are a deep teal primary and a
-> corporate blue secondary, consistent with the Tanfeeth→Atmaal heritage
-> palette described as "shades of blue and green". **Swap them before
-> launch.**
+No code change is needed — `src/components/ui/Logo.tsx` renders whatever is at
+those paths, and every usage goes through it. `public/favicon.svg` is also a
+redraw of the wordmark's "a".
 
-### 2. Logo — `src/components/ui/Logo.tsx`
+### 2. Brand colours — `src/styles/globals.css` *(applied)*
 
-Currently an SVG monogram plus an `atmaal` wordmark set in the display face.
-Drop the official asset into `public/images/atmaal-logo.svg` and swap the
-markup inside this one component; every usage (header, mobile menu, footer)
-renders through it.
+The official palette is in place:
 
-Also replace `public/favicon.svg`.
+| Role | Value | Token |
+|---|---|---|
+| Primary | `#006B5B` | `--brand-500` |
+| Secondary | `#92C640` | `--lime-500` |
+
+Both live in the `BRAND TOKENS` block as RGB channel triplets, with a full
+50–900 ramp derived from each. Nothing else hard-codes a brand colour, so any
+future adjustment is a single edit. Convert a hex to channels:
+`#006B5B` → `0 107 91`.
+
+**One constraint worth knowing:** white text on `#92C640` measures 2.7:1 and
+fails WCAG AA. The secondary therefore never sits behind white type. It carries
+dark type instead (the CTA buttons on dark sections use `bg-lime-500` with
+`text-ink-950`), and otherwise drives gradients, accents, data points and
+glows. The hero headline gradient ends at `lime-700` rather than `lime-500` for
+the same reason — at display size the tail still has to clear 3:1.
 
 ### 3. Photography — `public/images/`
 
@@ -87,6 +97,13 @@ Business facts are reproduced from Atmaal's existing positioning, not invented:
 
 No certifications, partnerships, client names or performance percentages are
 claimed anywhere in the site.
+
+### Interior pages don't restate their own heading
+
+Each interior page sets its title in `PageHero`, then renders shared sections
+with `hideHeading` so the heading is not repeated immediately below it. When
+`hideHeading` is set, the section's item headings promote from `h3` to `h2` so
+the document outline stays contiguous. The audit checks both.
 
 ---
 
@@ -132,9 +149,11 @@ straight to their final value rather than freezing at zero.
 Checked against the production build in headless Chromium across all 8 routes:
 
 - **Contrast** — every text node measured against its resolved background,
-  compositing alpha; passes WCAG AA (4.5:1 body, 3:1 large).
-- **Structure** — exactly one `<h1>` per page, no heading-level jumps, no
-  `<img>` without `alt`, no interactive element without an accessible name.
+  compositing alpha and evaluating every stop of a gradient background against
+  the worst case; passes WCAG AA (4.5:1 body, 3:1 large).
+- **Structure** — exactly one `<h1>` per page, no heading-level jumps, no page
+  restating its own `<h1>` in a section below, no `<img>` without `alt` or that
+  fails to load, no interactive element without an accessible name.
 - **Responsive** — no horizontal overflow at 1440, 390 or 375px.
 - **Keyboard** — skip link is the first tab stop; mobile menu opens, traps
   focus and closes on `Escape`.

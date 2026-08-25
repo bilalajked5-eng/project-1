@@ -8,59 +8,60 @@
    (e.g. `bg-brand-500/10`) work against them.
 
    ▸ TO APPLY THE OFFICIAL BRAND GUIDE: replace the channel values in the
-     `--brand-*` (primary) and `--azure-*` (secondary) ramps below. Nothing
+     `--brand-*` (primary) and `--lime-*` (secondary) ramps below. Nothing
      else in the codebase hard-codes a brand colour, so a swap here
      propagates to every button, gradient, chart, icon and hover state.
    ▸ Convert a hex to channels: #00937F → `0 147 127`.
    ══════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Primary brand — teal/green. Used for CTAs, highlights, data viz. */
-  --brand-50: 234 248 245;
-  --brand-100: 204 237 231;
-  --brand-200: 153 219 207;
-  --brand-300: 95 197 180;
-  --brand-400: 43 172 152;
-  --brand-500: 0 147 127;
-  --brand-600: 0 123 107;
-  --brand-700: 3 99 86;
-  --brand-800: 8 76 67;
-  --brand-900: 10 60 54;
+  /* Primary brand — #006B5B. CTAs, highlights, data visualisation. */
+  --brand-50: 230 242 239;
+  --brand-100: 194 226 219;
+  --brand-200: 141 200 189;
+  --brand-300: 85 168 153;
+  --brand-400: 33 138 120;
+  --brand-500: 0 107 91;     /* #006B5B — exact brand value */
+  --brand-600: 0 90 77;
+  --brand-700: 0 72 61;
+  --brand-800: 0 56 48;
+  --brand-900: 0 43 37;
 
-  /* Secondary brand — deep corporate blue. Structure, depth, accents. */
-  --azure-50: 237 244 250;
-  --azure-100: 211 228 242;
-  --azure-200: 167 200 228;
-  --azure-300: 111 165 207;
-  --azure-400: 59 128 180;
-  --azure-500: 26 99 150;
-  --azure-600: 16 80 124;
-  --azure-700: 16 58 94;
-  --azure-800: 13 46 74;
-  --azure-900: 10 35 56;
+  /* Secondary brand — #92C640. Gradient partner, accents, data points. */
+  --lime-50: 244 250 234;
+  --lime-100: 229 243 206;
+  --lime-200: 205 231 163;
+  --lime-300: 180 218 119;
+  --lime-400: 161 206 87;
+  --lime-500: 146 198 64;    /* #92C640 — exact brand value */
+  --lime-600: 125 172 51;
+  --lime-700: 100 138 40;
+  --lime-800: 77 106 31;
+  --lime-900: 59 82 24;
 
-  /* Dark corporate ground */
-  --ink-950: 4 16 28;
-  --ink-900: 7 24 42;
-  --ink-800: 12 35 56;
-  --ink-700: 20 48 71;
-  --ink-600: 30 64 89;
+  /* Dark corporate ground — a deep green-black, keyed to the primary so the
+     dark sections sit in the same family rather than fighting it. */
+  --ink-950: 4 18 15;
+  --ink-900: 7 29 24;
+  --ink-800: 12 43 36;
+  --ink-700: 19 58 49;
+  --ink-600: 28 76 65;
 
-  /* Neutrals */
-  --sand-25: 252 253 253;
-  --sand-50: 247 249 250;
-  --sand-100: 239 242 244;
-  --sand-200: 226 231 235;
-  --sand-300: 203 211 218;
-  --sand-400: 138 152 164;  /* decorative / non-text use only */
-  --sand-500: 95 109 121;   /* 5.3:1 on white, 5.0:1 on sand-50 */
-  --sand-600: 82 97 109;
-  --sand-700: 61 74 84;
-  --sand-800: 42 52 60;
-  --sand-900: 26 33 40;
+  /* Neutrals — a whisper of green so they read as chosen, not defaulted */
+  --sand-25: 252 253 252;
+  --sand-50: 247 250 248;
+  --sand-100: 239 243 240;
+  --sand-200: 225 231 227;
+  --sand-300: 202 211 205;
+  --sand-400: 139 152 145;  /* decorative / non-text use only */
+  --sand-500: 95 109 103;   /* 5.3:1 on white */
+  --sand-600: 78 90 84;
+  --sand-700: 58 68 63;
+  --sand-800: 40 49 45;
+  --sand-900: 25 31 29;
 
-  /* Luminous accent for glows and data lines */
-  --glow: 53 208 180;
+  /* Luminous accent for glows and data lines — the secondary, brightened */
+  --glow: 168 220 94;
 
   /* Typography — Arabic swaps --font-body/--font-display via [dir="rtl"] */
   --font-display: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;

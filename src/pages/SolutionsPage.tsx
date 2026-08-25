@@ -15,7 +15,7 @@ export function SolutionsPage() {
   return (
     <>
       <PageHero eyebrow={t.solutions.eyebrow} title={page.hero} lede={page.lede} />
-      <Solutions />
+      <Solutions hideHeading />
       <Process />
       <CaseStudies />
       <ContactCTA withForm={false} />

@@ -25,20 +25,24 @@ const sizes: Record<Size, string> = {
 }
 
 const variants: Record<Variant, string> = {
-  /* Filled brand — the single strongest call on any screen */
+  /* Filled brand — the single strongest call on any screen.
+     A tonal teal gradient; white text clears 6.4:1 across the whole ramp. */
   primary:
-    'bg-brand-600 text-white shadow-[0_1px_2px_rgb(var(--ink-900)/0.16)] ' +
-    'hover:bg-brand-700 hover:shadow-lift hover:-translate-y-0.5 active:translate-y-0',
+    'bg-gradient-to-br from-brand-500 to-brand-600 text-white ' +
+    'shadow-[0_1px_2px_rgb(var(--ink-900)/0.18)] ' +
+    'hover:from-brand-600 hover:to-brand-700 hover:shadow-lift hover:-translate-y-0.5 active:translate-y-0',
   /* Outlined — pairs beside primary without competing */
   secondary:
     'bg-white text-ink-900 ring-1 ring-inset ring-sand-300 ' +
     'hover:ring-ink-900/25 hover:bg-sand-50 hover:-translate-y-0.5 active:translate-y-0',
   ghost:
     'text-ink-800 hover:text-brand-700 hover:bg-brand-50 px-3',
-  /* On the dark technology / CTA sections */
+  /* On the dark technology / CTA sections — the secondary brand green at full
+     strength, carrying dark text. White on #92C640 is only 2.7:1, so the
+     secondary earns its presence as a ground, never behind white type. */
   onDark:
-    'bg-white text-ink-900 hover:bg-brand-50 hover:-translate-y-0.5 active:translate-y-0 ' +
-    'shadow-[0_1px_2px_rgb(0_0_0/0.3)] hover:shadow-lift',
+    'bg-lime-500 text-ink-950 hover:bg-lime-400 hover:-translate-y-0.5 active:translate-y-0 ' +
+    'shadow-[0_2px_10px_-2px_rgb(var(--lime-500)/0.5)] hover:shadow-lift',
   onDarkGhost:
     'text-white ring-1 ring-inset ring-white/25 hover:ring-white/60 hover:bg-white/10 ' +
     'hover:-translate-y-0.5 active:translate-y-0',
@@ -150,7 +154,7 @@ export function TextLink({
 }) {
   const classes = cn(
     'group/link inline-flex items-center gap-2 text-body-sm font-medium transition-colors duration-300',
-    onDark ? 'text-brand-200 hover:text-white' : 'text-brand-700 hover:text-brand-800',
+    onDark ? 'text-lime-300 hover:text-white' : 'text-brand-700 hover:text-brand-800',
     className,
   )
 
@@ -162,7 +166,7 @@ export function TextLink({
           className={cn(
             'absolute -bottom-0.5 left-0 h-px w-full origin-left scale-x-0 transition-transform',
             'duration-400 ease-premium group-hover/link:scale-x-100',
-            onDark ? 'bg-brand-200' : 'bg-brand-700',
+            onDark ? 'bg-lime-300' : 'bg-brand-700',
           )}
         />
       </span>

@@ -5,26 +5,30 @@ import { LinkButton } from '@/components/ui/Button'
 import { Figure } from '@/components/visuals/Figure'
 
 /** Recruitment section — links out to the live Atmaal careers platform. */
-export function Careers() {
+export function Careers({ hideHeading }: { hideHeading?: boolean } = {}) {
   const t = useT()
 
   return (
-    <Section id="careers" tone="tint" aria-labelledby="careers-heading">
+    <Section id="careers" tone="tint" aria-labelledby={hideHeading ? undefined : "careers-heading"}>
       <div className="grid items-center gap-14 lg:grid-cols-12 lg:gap-14">
         <div className="lg:col-span-6">
-          <Reveal>
-            <Eyebrow>{t.careers.eyebrow}</Eyebrow>
-          </Reveal>
+          {!hideHeading && (
+            <>
+              <Reveal>
+                <Eyebrow>{t.careers.eyebrow}</Eyebrow>
+              </Reveal>
 
-          <Reveal delay={70}>
-            <h2 id="careers-heading" className="mt-6 text-display-lg text-ink-900">
-              {t.careers.heading}
-            </h2>
-          </Reveal>
+              <Reveal delay={70}>
+                <h2 id="careers-heading" className="mt-6 text-display-lg text-ink-900">
+                  {t.careers.heading}
+                </h2>
+              </Reveal>
 
-          <Reveal delay={140}>
-            <p className="mt-5 text-body-xl text-sand-600 text-pretty">{t.careers.sub}</p>
-          </Reveal>
+              <Reveal delay={140}>
+                <p className="mt-5 text-body-xl text-sand-600 text-pretty">{t.careers.sub}</p>
+              </Reveal>
+            </>
+          )}
 
           <ul className="mt-10 space-y-px overflow-hidden rounded-panel bg-sand-200 ring-1 ring-sand-200">
             {t.careers.items.map((item, i) => (

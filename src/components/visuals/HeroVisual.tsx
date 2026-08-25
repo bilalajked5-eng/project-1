@@ -51,7 +51,7 @@ export function HeroVisual({ ariaLabel }: { ariaLabel: string }) {
       />
       <div
         aria-hidden="true"
-        className="absolute inset-[18%] rounded-full bg-[radial-gradient(circle_at_35%_30%,rgb(var(--azure-500)/0.14),transparent_62%)] blur-3xl"
+        className="absolute inset-[18%] rounded-full bg-[radial-gradient(circle_at_35%_30%,rgb(var(--lime-500)/0.14),transparent_62%)] blur-3xl"
       />
 
       <svg
@@ -67,21 +67,21 @@ export function HeroVisual({ ariaLabel }: { ariaLabel: string }) {
       >
         <defs>
           <linearGradient id="hv-flow" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="rgb(var(--azure-500))" stopOpacity="0.12" />
+            <stop offset="0%" stopColor="rgb(var(--lime-500))" stopOpacity="0.12" />
             <stop offset="55%" stopColor="rgb(var(--brand-500))" stopOpacity="0.7" />
             <stop offset="100%" stopColor="rgb(var(--glow))" stopOpacity="0.85" />
           </linearGradient>
 
           <linearGradient id="hv-ring" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="rgb(var(--brand-500))" stopOpacity="0.42" />
-            <stop offset="50%" stopColor="rgb(var(--azure-500))" stopOpacity="0.16" />
+            <stop offset="50%" stopColor="rgb(var(--lime-500))" stopOpacity="0.16" />
             <stop offset="100%" stopColor="rgb(var(--brand-400))" stopOpacity="0.38" />
           </linearGradient>
 
           <radialGradient id="hv-core" cx="42%" cy="36%">
             <stop offset="0%" stopColor="rgb(var(--glow))" stopOpacity="0.95" />
             <stop offset="45%" stopColor="rgb(var(--brand-500))" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="rgb(var(--azure-700))" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="rgb(var(--lime-700))" stopOpacity="0.95" />
           </radialGradient>
 
           <filter id="hv-soft" x="-40%" y="-40%" width="180%" height="180%">
@@ -222,7 +222,7 @@ export function HeroVisual({ ariaLabel }: { ariaLabel: string }) {
             cy="260"
             r="78"
             fill="none"
-            stroke="rgb(var(--azure-400))"
+            stroke="rgb(var(--lime-400))"
             strokeOpacity="0.32"
             strokeWidth="1"
             strokeDasharray="4 12"
@@ -263,7 +263,7 @@ export function HeroVisual({ ariaLabel }: { ariaLabel: string }) {
               width="12"
               height={bar.h}
               rx="3"
-              fill={i === 3 ? 'rgb(var(--brand-500))' : 'rgb(var(--azure-700))'}
+              fill={i === 3 ? 'rgb(var(--brand-500))' : 'rgb(var(--lime-700))'}
               fillOpacity={i === 3 ? 1 : 0.28}
               style={
                 reduced

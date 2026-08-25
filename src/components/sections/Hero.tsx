@@ -23,7 +23,7 @@ export function Hero() {
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_60%_at_4%_92%,rgb(var(--azure-50)),transparent_60%)]"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_60%_at_4%_92%,rgb(var(--lime-50)),transparent_60%)]"
       />
       <div
         aria-hidden="true"
@@ -43,7 +43,7 @@ export function Hero() {
                 {t.hero.h1a}
               </Reveal>
               <Reveal delay={170} as="span" className="block">
-                <span className="bg-gradient-to-br from-brand-600 via-brand-500 to-azure-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-br from-brand-700 via-brand-500 to-lime-700 bg-clip-text text-transparent">
                   {t.hero.h1b}
                 </span>
               </Reveal>
