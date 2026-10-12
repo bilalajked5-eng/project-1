@@ -1,128 +1,193 @@
-import { useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
-import { useT } from '@/i18n'
-import { useScrolled } from '@/lib/hooks'
-import { cn } from '@/lib/cn'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { basePath, useLanguage } from '@/i18n'
+import { coreServices, sectors, services } from '@/content/services'
+import { cn, useScrolled } from '@/lib/hooks'
 import { Logo } from '@/components/ui/Logo'
-import { LinkButton } from '@/components/ui/Button'
+import { Arrow } from '@/components/ui/Links'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { MobileMenu } from './MobileMenu'
-import { navItems } from './nav'
+import { isActive, primaryNav } from './nav'
 
-/**
- * Sticky header.
- *
- * At rest it floats on a translucent surface with generous height. Past the
- * fold it compacts, deepens its blur and picks up a hairline + shadow — the
- * elevation change signals "you have left the hero" without a jump.
- */
+const serviceSlugs = services.map((s) => s.slug)
+
+/** Pages that open on a full-bleed dark hero, where the header starts transparent. */
+const darkHeroPages = (base: string) => base === '/'
+
 export function Header() {
-  const t = useT()
-  const scrolled = useScrolled(24)
+  const { t, tr, href } = useLanguage()
+  const { pathname } = useLocation()
+  const base = basePath(pathname)
+  const scrolled = useScrolled(40)
   const [menuOpen, setMenuOpen] = useState(false)
-  const items = navItems(t)
+  const [panelOpen, setPanelOpen] = useState(false)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const closeTimer = useRef<number>()
+
+  const overHero = darkHeroPages(base) && !scrolled && !panelOpen
+  const solid = !overHero
+
+  // Close overlays on navigation
+  useEffect(() => {
+    setMenuOpen(false)
+    setPanelOpen(false)
+  }, [pathname])
+
+  // Escape closes the services panel
+  useEffect(() => {
+    if (!panelOpen) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setPanelOpen(false)
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [panelOpen])
+
+  const openPanel = () => {
+    window.clearTimeout(closeTimer.current)
+    setPanelOpen(true)
+  }
+  const scheduleClose = () => {
+    closeTimer.current = window.setTimeout(() => setPanelOpen(false), 180)
+  }
 
   return (
     <>
       <header
         className={cn(
-          'fixed inset-x-0 top-0 z-40 transition-all duration-500 ease-premium',
-          scrolled
-            ? 'bg-white/85 shadow-header backdrop-blur-xl backdrop-saturate-150'
-            : 'bg-white/0',
+          'fixed inset-x-0 top-0 z-40 transition-[background-color,color,box-shadow,height] duration-700 ease-silk',
+          solid ? 'bg-ivory-100/95 text-charcoal-900 shadow-[0_1px_0_rgba(30,29,27,0.08)] backdrop-blur-sm' : 'bg-transparent text-ivory-50',
         )}
-        style={{ ['--header-h' as string]: scrolled ? '68px' : '84px' }}
       >
-        <div className="shell">
-          <div
-            className={cn(
-              'flex items-center justify-between transition-all duration-500 ease-premium',
-              scrolled ? 'h-[68px]' : 'h-[84px]',
-            )}
-          >
-            <Link
-              to="/"
-              aria-label={t.a11y.homeLink}
-              className="shrink-0 transition-opacity duration-300 hover:opacity-80"
-            >
-              <Logo />
-            </Link>
+        <div className={cn('shell flex items-center justify-between gap-6 transition-[height] duration-700 ease-silk', scrolled ? 'h-[4.25rem]' : 'h-20 lg:h-24')}>
+          <Link to={href('/')} aria-label={t.a11y.home} className="shrink-0">
+            <Logo light={!solid} />
+          </Link>
 
-            {/* Desktop navigation — minimal, with a precise active indicator */}
-            <nav aria-label={t.nav.primary} className="hidden lg:block">
-              <ul className="flex items-center gap-1">
-                {items.map((item) => (
-                  <li key={item.to}>
-                    <NavLink
-                      to={item.to}
-                      end={item.to === '/'}
-                      className={({ isActive }) =>
-                        cn(
-                          'group relative block rounded-control px-3.5 py-2 text-body-sm font-medium transition-colors duration-300',
-                          isActive ? 'text-ink-900' : 'text-sand-600 hover:text-ink-900',
-                        )
-                      }
+          <nav aria-label={t.a11y.primaryNav} className="hidden lg:block">
+            <ul className="flex items-center gap-8 xl:gap-10">
+              {primaryNav.map((item) => {
+                const active = isActive(item, base, serviceSlugs)
+                if (item.panel) {
+                  return (
+                    <li key={item.key} className="flex items-center gap-1.5" onMouseEnter={openPanel} onMouseLeave={scheduleClose}>
+                      <Link
+                        to={href(item.path)}
+                        aria-current={active ? 'page' : undefined}
+                        className="link-underline pb-1 text-body-sm font-medium"
+                      >
+                        {t.nav[item.key]}
+                      </Link>
+                      <button
+                        type="button"
+                        aria-expanded={panelOpen}
+                        aria-controls="services-panel"
+                        aria-label={t.a11y.servicesMenu}
+                        onClick={() => setPanelOpen((o) => !o)}
+                        className="-m-2 p-2"
+                      >
+                        <svg viewBox="0 0 10 6" className={cn('h-1.5 w-2.5 transition-transform duration-400', panelOpen && 'rotate-180')} aria-hidden="true">
+                          <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.2" />
+                        </svg>
+                      </button>
+                    </li>
+                  )
+                }
+                return (
+                  <li key={item.key}>
+                    <Link
+                      to={href(item.path)}
+                      aria-current={active ? 'page' : undefined}
+                      className="link-underline pb-1 text-body-sm font-medium"
                     >
-                      {({ isActive }) => (
-                        <>
-                          {item.label}
-                          <span
-                            aria-hidden="true"
-                            className={cn(
-                              'absolute inset-x-3.5 -bottom-px h-px origin-center bg-brand-600 transition-transform duration-400 ease-premium',
-                              isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100',
-                            )}
-                          />
-                        </>
-                      )}
-                    </NavLink>
+                      {t.nav[item.key]}
+                    </Link>
                   </li>
-                ))}
-              </ul>
-            </nav>
+                )
+              })}
+            </ul>
+          </nav>
 
-            <div className="flex items-center gap-3">
-              <div className="hidden md:block">
-                <LanguageSwitcher />
-              </div>
-
-              <LinkButton
-                to="/contact"
-                variant="primary"
-                size="md"
-                arrow
-                className="hidden sm:inline-flex"
-              >
-                {t.cta.talkToExpert}
-              </LinkButton>
-
-              <button
-                type="button"
-                onClick={() => setMenuOpen(true)}
-                aria-label={t.nav.open}
-                aria-expanded={menuOpen}
-                aria-controls="mobile-menu"
-                className="grid h-11 w-11 place-items-center rounded-control text-ink-800 ring-1 ring-sand-200 transition-colors duration-300 hover:bg-sand-50 lg:hidden"
-              >
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-                  <path d="M3.5 7h17M3.5 12h17M3.5 17h17" />
-                </svg>
-              </button>
-            </div>
+          <div className="flex items-center gap-5 xl:gap-7">
+            <LanguageSwitcher className="hidden sm:inline-block" />
+            <Link
+              to={href('/contact/')}
+              className={cn(
+                'hidden min-h-[2.75rem] items-center border px-5 text-caption font-semibold uppercase tracking-[0.16em] transition-colors duration-400 md:inline-flex',
+                solid
+                  ? 'border-charcoal-900 text-charcoal-900 hover:bg-charcoal-900 hover:text-ivory-50'
+                  : 'border-ivory-50/60 text-ivory-50 hover:bg-ivory-50 hover:text-charcoal-900',
+              )}
+            >
+              {t.nav.cta}
+            </Link>
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-menu"
+              aria-label={t.a11y.menuOpen}
+              className="-me-2 flex h-11 w-11 flex-col items-center justify-center gap-[7px] lg:hidden"
+            >
+              <span className="block h-px w-6 bg-current" />
+              <span className="block h-px w-6 bg-current" />
+            </button>
           </div>
         </div>
 
-        {/* Hairline appears only once elevated */}
+        {/* Services panel (desktop) */}
         <div
-          aria-hidden="true"
+          id="services-panel"
+          ref={panelRef}
+          onMouseEnter={openPanel}
+          onMouseLeave={scheduleClose}
           className={cn(
-            'h-px bg-gradient-to-r from-transparent via-sand-200 to-transparent transition-opacity duration-500',
-            scrolled ? 'opacity-100' : 'opacity-0',
+            'absolute inset-x-0 top-full hidden border-t border-charcoal-900/10 bg-ivory-100 text-charcoal-900 shadow-[0_24px_48px_-24px_rgba(30,29,27,0.25)]',
+            panelOpen && 'lg:block',
           )}
-        />
+        >
+          <div className="shell grid grid-cols-12 gap-10 py-12">
+            <div className="col-span-7">
+              <p className="eyebrow mb-6">{t.nav.servicesHeading}</p>
+              <ul className="grid grid-cols-2 gap-x-10">
+                {coreServices.map((s) => (
+                  <li key={s.slug} className="border-t border-charcoal-900/10">
+                    <Link to={href(`/${s.slug}/`)} className="group flex items-baseline gap-4 py-4">
+                      <span className="text-caption text-stone-600">{s.index}</span>
+                      <span className="font-serif text-[1.35rem] leading-tight">
+                        <span className="link-underline">{tr(s.title)}</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="col-span-3">
+              <p className="eyebrow mb-6">{t.nav.sectorsHeading}</p>
+              <ul>
+                {[
+                  { path: '/residential-interior-design-furnishing/', label: tr(sectors[0].title) },
+                  { path: '/office-furnishing-fit-out-solutions/', label: t.services.sectorsOffice },
+                  { path: '/hospitality-furnishing-solutions/', label: t.services.sectorsHospitality },
+                  { path: '/styling-furnishing/', label: tr(sectors[1].title) },
+                ].map((s) => (
+                  <li key={s.path} className="border-t border-charcoal-900/10">
+                    <Link to={href(s.path)} className="group block py-4 text-body-sm font-medium">
+                      <span className="link-underline">{s.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="col-span-2 flex flex-col justify-end">
+              <Link to={href('/services/')} className="group inline-flex items-center gap-3 text-caption font-semibold uppercase tracking-[0.16em]">
+                <span className="link-underline pb-1">{t.nav.allServices}</span>
+                <Arrow />
+              </Link>
+            </div>
+          </div>
+        </div>
       </header>
 
-      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} items={items} />
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </>
   )
 }

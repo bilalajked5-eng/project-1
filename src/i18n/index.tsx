@@ -1,52 +1,46 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { en, type Content } from './en'
-import { ar } from './ar'
-
-export type Locale = 'en' | 'ar'
-
-const dictionaries: Record<Locale, Content> = { en, ar }
-const STORAGE_KEY = 'atmaal:locale'
+import { createContext, useContext, useMemo, type ReactNode } from 'react'
+import type { L, Locale } from '@/content/types'
+import { ui, type UI } from './ui'
 
 interface LanguageValue {
   locale: Locale
   dir: 'ltr' | 'rtl'
-  t: Content
-  setLocale: (next: Locale) => void
-  toggle: () => void
+  t: UI
+  /** Pick the active language from a bilingual record. */
+  tr: (value: L) => string
+  /** Prefix an English path for the active locale. */
+  href: (path: string) => string
 }
 
 const LanguageContext = createContext<LanguageValue | null>(null)
 
-function readInitialLocale(): Locale {
-  if (typeof window === 'undefined') return 'en'
-  const stored = window.localStorage.getItem(STORAGE_KEY)
-  if (stored === 'en' || stored === 'ar') return stored
-  // Honour the browser's preferred language on first visit
-  return window.navigator.language?.toLowerCase().startsWith('ar') ? 'ar' : 'en'
+/** `/about/` → `/ar/about/` for Arabic. Paths always keep their trailing slash. */
+export function localePath(locale: Locale, path: string) {
+  if (locale === 'en') return path
+  return path === '/' ? '/ar/' : `/ar${path}`
 }
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(readInitialLocale)
+/** Read the locale from a URL path: everything under `/ar` is Arabic. */
+export function localeFromPath(pathname: string): Locale {
+  return pathname === '/ar' || pathname.startsWith('/ar/') ? 'ar' : 'en'
+}
 
-  const dir = locale === 'ar' ? 'rtl' : 'ltr'
+/** Strip the locale prefix, giving the English-equivalent path. */
+export function basePath(pathname: string) {
+  if (pathname === '/ar' || pathname === '/ar/') return '/'
+  return pathname.startsWith('/ar/') ? pathname.slice(3) : pathname
+}
 
-  useEffect(() => {
-    const root = document.documentElement
-    root.lang = locale
-    root.dir = dir
-    try {
-      window.localStorage.setItem(STORAGE_KEY, locale)
-    } catch {
-      /* storage can be unavailable in private browsing — non-fatal */
-    }
-  }, [locale, dir])
-
-  const setLocale = useCallback((next: Locale) => setLocaleState(next), [])
-  const toggle = useCallback(() => setLocaleState((c) => (c === 'en' ? 'ar' : 'en')), [])
-
+export function LanguageProvider({ locale, children }: { locale: Locale; children: ReactNode }) {
   const value = useMemo<LanguageValue>(
-    () => ({ locale, dir, t: dictionaries[locale], setLocale, toggle }),
-    [locale, dir, setLocale, toggle],
+    () => ({
+      locale,
+      dir: locale === 'ar' ? 'rtl' : 'ltr',
+      t: ui[locale],
+      tr: (v) => v[locale],
+      href: (path) => localePath(locale, path),
+    }),
+    [locale],
   )
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
@@ -57,10 +51,3 @@ export function useLanguage(): LanguageValue {
   if (!ctx) throw new Error('useLanguage must be used within a LanguageProvider')
   return ctx
 }
-
-/** Shorthand for components that only need the dictionary. */
-export function useT(): Content {
-  return useLanguage().t
-}
-
-export type { Content }

@@ -1,16 +1,35 @@
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import { LanguageProvider } from './i18n'
 import { App } from './App'
 import './styles/globals.css'
+import './lib/analytics'
 
-createRoot(document.getElementById('root')!).render(
+// Google Tag Manager, only when a container ID is configured
+const gtm = import.meta.env.VITE_GTM_ID
+if (gtm) {
+  window.dataLayer = window.dataLayer || []
+  window.dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' })
+  const s = document.createElement('script')
+  s.async = true
+  s.src = `https://www.googletagmanager.com/gtm.js?id=${encodeURIComponent(gtm)}`
+  document.head.appendChild(s)
+}
+
+const root = document.getElementById('root')!
+const app = (
   <StrictMode>
     <BrowserRouter>
-      <LanguageProvider>
-        <App />
-      </LanguageProvider>
+      <App />
     </BrowserRouter>
-  </StrictMode>,
+  </StrictMode>
 )
+
+// Hydrate only markup prerendered for this exact URL. Error pages and SPA
+// fallbacks are served at other URLs, so those render from scratch.
+if (root.hasChildNodes() && root.dataset.route === window.location.pathname) {
+  hydrateRoot(root, app)
+} else {
+  root.textContent = ''
+  createRoot(root).render(app)
+}

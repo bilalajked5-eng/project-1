@@ -1,115 +1,97 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { useT } from '@/i18n'
-import { useFocusTrap, useScrollLock } from '@/lib/hooks'
-import { LinkButton } from '@/components/ui/Button'
-import { LanguageSwitcher } from './LanguageSwitcher'
+import { basePath, useLanguage } from '@/i18n'
+import { company, whatsappLink } from '@/content/company'
+import { services } from '@/content/services'
+import { cn, useFocusTrap, useScrollLock } from '@/lib/hooks'
+import { track } from '@/lib/analytics'
 import { Logo } from '@/components/ui/Logo'
-import { cn } from '@/lib/cn'
-import type { NavItem } from './nav'
+import { LanguageSwitcher } from './LanguageSwitcher'
+import { isActive, primaryNav } from './nav'
 
-/** Full-screen menu — deliberately spacious rather than a cramped dropdown. */
-export function MobileMenu({
-  open,
-  onClose,
-  items,
-}: {
-  open: boolean
-  onClose: () => void
-  items: NavItem[]
-}) {
-  const t = useT()
+const serviceSlugs = services.map((s) => s.slug)
+
+export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t, href } = useLanguage()
   const { pathname } = useLocation()
+  const base = basePath(pathname)
   const trapRef = useFocusTrap<HTMLDivElement>(open)
+  const closeRef = useRef<HTMLButtonElement>(null)
   useScrollLock(open)
 
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
+    closeRef.current?.focus()
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
   return (
     <div
-      ref={trapRef}
       id="mobile-menu"
-      aria-hidden={!open}
+      ref={trapRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t.a11y.primaryNav}
       className={cn(
-        'on-dark fixed inset-0 z-50 flex flex-col bg-ink-950 lg:hidden',
-        'transition-[opacity,visibility] duration-400 ease-premium',
+        'fixed inset-0 z-50 flex flex-col bg-charcoal-900 text-ivory-50 transition-[opacity,visibility] duration-700 ease-silk lg:hidden',
         open ? 'visible opacity-100' : 'invisible opacity-0',
       )}
     >
-      {/* Ambient brand wash so the panel reads as designed, not as a black sheet */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgb(var(--brand-600)/0.3),transparent_58%)]"
-      />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-grid-dark [background-size:44px_44px] opacity-30" />
-
-      <div className="relative flex items-center justify-between px-gutter py-5">
-        <Link to="/" onClick={onClose} aria-label={t.a11y.homeLink}>
-          <Logo variant="light" />
-        </Link>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={t.nav.close}
-          className="grid h-11 w-11 place-items-center rounded-control text-white/80 ring-1 ring-white/15 transition-colors duration-300 hover:bg-white/10 hover:text-white"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
-            <path d="M6 6l12 12M18 6 6 18" />
+      <div className="shell flex h-20 items-center justify-between">
+        <Logo light />
+        <button ref={closeRef} type="button" onClick={onClose} aria-label={t.a11y.menuClose} className="-me-2 flex h-11 w-11 items-center justify-center">
+          <svg viewBox="0 0 20 20" className="h-5 w-5" aria-hidden="true">
+            <path d="M3 3l14 14M17 3L3 17" stroke="currentColor" strokeWidth="1.2" />
           </svg>
         </button>
       </div>
 
-      <nav aria-label={t.nav.menu} className="relative flex-1 overflow-y-auto px-gutter pt-4">
-        <ul className="flex flex-col">
-          {items.map((item, i) => {
-            const active = pathname === item.to
-            return (
-              <li key={item.to} className="border-b border-white/[0.07]">
-                <Link
-                  to={item.to}
-                  onClick={onClose}
-                  aria-current={active ? 'page' : undefined}
-                  className={cn(
-                    'group flex items-center justify-between py-5 font-display text-display-sm transition-colors duration-300',
-                    active ? 'text-brand-300' : 'text-white hover:text-brand-300',
-                  )}
-                  style={{
-                    transitionDelay: open ? `${80 + i * 45}ms` : '0ms',
-                    opacity: open ? 1 : 0,
-                    transform: open ? 'none' : 'translateY(14px)',
-                    transitionProperty: 'opacity, transform, color',
-                    transitionDuration: '520ms',
-                    transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-                  }}
-                >
-                  {item.label}
-                  <svg viewBox="0 0 16 16" className="rtl-flip h-4 w-4 text-white/30 transition-transform duration-400 ease-premium group-hover:translate-x-1 group-hover:text-brand-300" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M2.5 8h10.5M9 3.75 13.25 8 9 12.25" />
-                  </svg>
-                </Link>
-              </li>
-            )
-          })}
+      <nav aria-label={t.a11y.primaryNav} className="shell flex-1 overflow-y-auto pb-10 pt-8">
+        <ul>
+          {primaryNav.map((item, i) => (
+            <li
+              key={item.key}
+              className={cn('border-b border-ivory-50/10 transition-[opacity,transform] duration-700 ease-silk', open ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0')}
+              style={{ transitionDelay: open ? `${120 + i * 50}ms` : '0ms' }}
+            >
+              <Link
+                to={href(item.path)}
+                aria-current={isActive(item, base, serviceSlugs) ? 'page' : undefined}
+                className="flex items-baseline justify-between py-4 font-serif text-[2rem] leading-tight aria-[current=page]:text-bronze-300"
+              >
+                {t.nav[item.key]}
+                <span className="font-sans text-caption text-ivory-50/60">0{i + 1}</span>
+              </Link>
+            </li>
+          ))}
         </ul>
+
+        <div className="mt-10 space-y-3 text-body-sm">
+          <a href={`tel:${company.phones[0].tel}`} dir="ltr" className="block" onClick={() => track('click_to_call', { location: 'mobile_menu' })}>
+            {company.phones[0].display}
+          </a>
+          <a
+            href={whatsappLink()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-bronze-300"
+            onClick={() => track('whatsapp_click', { location: 'mobile_menu' })}
+          >
+            {t.common.whatsapp}
+          </a>
+          <LanguageSwitcher className="inline-block pt-4" />
+        </div>
       </nav>
 
-      <div className="relative space-y-5 px-gutter pb-10 pt-8">
-        <LinkButton to="/contact" onClick={onClose} variant="primary" size="lg" arrow className="w-full">
-          {t.cta.talkToExpert}
-        </LinkButton>
-        <div className="flex items-center justify-between">
-          <LanguageSwitcher onDark size="lg" onSelect={onClose} />
-          <a href={`mailto:${t.contact.email}`} className="text-body-sm text-white/55 transition-colors hover:text-white">
-            {t.contact.email}
-          </a>
-        </div>
+      <div className="shell pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+        <Link
+          to={href('/contact/')}
+          className="flex min-h-[3.25rem] w-full items-center justify-center bg-ivory-50 text-caption font-semibold uppercase tracking-[0.16em] text-charcoal-900"
+        >
+          {t.nav.cta}
+        </Link>
       </div>
     </div>
   )

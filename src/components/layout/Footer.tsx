@@ -1,107 +1,120 @@
 import { Link } from 'react-router-dom'
-import { useT } from '@/i18n'
+import { useLanguage } from '@/i18n'
+import { company, whatsappLink } from '@/content/company'
+import { coreServices, sectors } from '@/content/services'
+import { track } from '@/lib/analytics'
 import { Logo } from '@/components/ui/Logo'
-import { LanguageSwitcher } from './LanguageSwitcher'
-import { IconLinkedIn, IconMail, IconX } from '@/components/ui/Icons'
 
 export function Footer() {
-  const t = useT()
+  const { t, tr, href } = useLanguage()
+  const a = company.address
   const year = new Date().getFullYear()
 
+  const explore = [
+    { label: t.nav.about, path: '/about/' },
+    { label: t.nav.process, path: '/our-process/' },
+    { label: t.nav.projects, path: '/our-projects/' },
+    { label: t.nav.brands, path: '/our-brands/' },
+    { label: t.nav.contact, path: '/contact/' },
+  ]
+
   return (
-    <footer className="on-dark relative isolate overflow-hidden bg-ink-950 text-white">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_10%_0%,rgb(var(--brand-700)/0.35),transparent_55%)]"
-      />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-grid-dark [background-size:52px_52px] opacity-25" />
-
-      <div className="shell relative">
-        <div className="grid gap-12 py-16 lg:grid-cols-12 lg:gap-10 lg:py-20">
-          {/* Brand column */}
-          <div className="lg:col-span-4">
-            <Link to="/" aria-label={t.a11y.homeLink} className="inline-block">
-              <Logo variant="light" />
-            </Link>
-            <p className="mt-6 max-w-sm text-body-sm leading-relaxed text-white/55">
-              {t.footer.blurb}
-            </p>
-
-            <div className="mt-8 space-y-3">
-              <a
-                href={`mailto:${t.contact.email}`}
-                className="group inline-flex items-center gap-3 text-body-sm text-white/75 transition-colors duration-300 hover:text-white"
-              >
-                <IconMail className="h-4 w-4 text-brand-300" />
-                {t.contact.email}
-              </a>
-              <p className="text-body-sm text-white/60">{t.contact.location}</p>
-            </div>
-
-            <div className="mt-8">
-              <p className="text-eyebrow uppercase text-white/60">{t.footer.social}</p>
-              <div className="mt-3 flex items-center gap-2">
-                <a
-                  href="https://x.com/atmaalksa"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Atmaal on X"
-                  className="grid h-10 w-10 place-items-center rounded-control text-white/60 ring-1 ring-white/12 transition-all duration-300 hover:bg-white/10 hover:text-white"
-                >
-                  <IconX className="h-4 w-4" />
-                </a>
-                <a
-                  href="https://www.linkedin.com/company/atmaal"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Atmaal on LinkedIn"
-                  className="grid h-10 w-10 place-items-center rounded-control text-white/60 ring-1 ring-white/12 transition-all duration-300 hover:bg-white/10 hover:text-white"
-                >
-                  <IconLinkedIn className="h-4 w-4" />
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {/* Link columns */}
-          <div className="grid gap-10 sm:grid-cols-2 lg:col-span-8 lg:grid-cols-4">
-            {t.footer.columns.map((col) => (
-              <nav key={col.title} aria-label={col.title}>
-                <h2 className="text-eyebrow uppercase text-white/60">{col.title}</h2>
-                <ul className="mt-5 space-y-3">
-                  {col.links.map((link) => (
-                    <li key={`${col.title}-${link.label}`}>
-                      <Link
-                        to={link.to}
-                        className="group inline-flex text-body-sm text-white/65 transition-colors duration-300 hover:text-white"
-                      >
-                        <span className="relative">
-                          {link.label}
-                          <span className="absolute -bottom-0.5 left-0 h-px w-full origin-left scale-x-0 bg-brand-300 transition-transform duration-400 ease-premium group-hover:scale-x-100" />
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            ))}
-          </div>
+    <footer className="bg-charcoal-950 text-ivory-50">
+      <div className="shell grid gap-14 py-20 md:grid-cols-12 lg:py-28">
+        <div className="md:col-span-12 lg:col-span-4">
+          <Logo light />
+          <p className="mt-6 max-w-xs text-body-sm text-ivory-50/75">{t.footer.tagline}</p>
+          <a
+            href={company.profilePdf}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link-underline mt-8 inline-block pb-1 text-caption font-semibold uppercase tracking-[0.16em] text-bronze-300"
+          >
+            {t.common.downloadProfile}
+          </a>
         </div>
 
-        <div className="hairline flex flex-col gap-5 py-7 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-body-sm text-white/60">
-            © {year} Atmaal. {t.footer.rights}
-          </p>
-
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-            <Link to="/privacy" className="text-body-sm text-white/50 transition-colors hover:text-white">
-              {t.footer.privacy}
-            </Link>
-            <Link to="/terms" className="text-body-sm text-white/50 transition-colors hover:text-white">
-              {t.footer.terms}
-            </Link>
-            <LanguageSwitcher onDark />
+        <nav aria-label={t.a11y.footerNav} className="grid gap-10 sm:grid-cols-3 md:col-span-12 lg:col-span-8">
+          <div>
+            <h2 className="eyebrow mb-5 !text-bronze-300">{t.footer.explore}</h2>
+            <ul className="space-y-3 text-body-sm">
+              {explore.map((l) => (
+                <li key={l.path}>
+                  <Link to={href(l.path)} className="link-underline text-ivory-50/85 hover:text-ivory-50">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
+          <div>
+            <h2 className="eyebrow mb-5 !text-bronze-300">{t.footer.services}</h2>
+            <ul className="space-y-3 text-body-sm">
+              {[...coreServices, ...sectors].map((s) => (
+                <li key={s.slug}>
+                  <Link to={href(`/${s.slug}/`)} className="link-underline text-ivory-50/85 hover:text-ivory-50">
+                    {tr(s.title)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h2 className="eyebrow mb-5 !text-bronze-300">{t.footer.contact}</h2>
+            <address className="space-y-3 text-body-sm not-italic text-ivory-50/85">
+              <p>
+                {tr(a.building)}
+                <br />
+                {tr(a.street)}
+                <br />
+                {tr(a.district)}, {tr(a.city)} {a.postalCode}
+              </p>
+              {company.phones.map((p) => (
+                <p key={p.tel}>
+                  <a href={`tel:${p.tel}`} dir="ltr" className="link-underline hover:text-ivory-50" onClick={() => track('click_to_call', { location: 'footer' })}>
+                    {p.display}
+                  </a>
+                </p>
+              ))}
+              <p>
+                <a href={`mailto:${company.email}`} className="link-underline hover:text-ivory-50" onClick={() => track('email_click', { location: 'footer' })}>
+                  {company.email}
+                </a>
+              </p>
+              <p>
+                <a
+                  href={whatsappLink()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="link-underline hover:text-ivory-50"
+                  onClick={() => track('whatsapp_click', { location: 'footer' })}
+                >
+                  {t.common.whatsapp}
+                </a>
+              </p>
+              <p className="text-ivory-50/65">{tr(company.hours.label)}</p>
+            </address>
+          </div>
+        </nav>
+      </div>
+
+      <div className="border-t border-ivory-50/10">
+        <div className="shell flex flex-col gap-4 py-6 text-caption text-ivory-50/65 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            © {year} {company.legalName}. {t.footer.rights}
+          </p>
+          <ul className="flex gap-6">
+            <li>
+              <Link to={href('/privacy-policy/')} className="link-underline hover:text-ivory-50">
+                {t.footer.privacy}
+              </Link>
+            </li>
+            <li>
+              <Link to={href('/terms-conditions/')} className="link-underline hover:text-ivory-50">
+                {t.footer.terms}
+              </Link>
+            </li>
+          </ul>
         </div>
       </div>
     </footer>

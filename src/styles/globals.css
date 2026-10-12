@@ -2,232 +2,242 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ══════════════════════════════════════════════════════════════════════
-   BRAND TOKENS — single source of truth for the Atmaal palette.
-   Values are space-separated RGB channels so Tailwind opacity modifiers
-   (e.g. `bg-brand-500/10`) work against them.
-
-   ▸ TO APPLY THE OFFICIAL BRAND GUIDE: replace the channel values in the
-     `--brand-*` (primary) and `--lime-*` (secondary) ramps below. Nothing
-     else in the codebase hard-codes a brand colour, so a swap here
-     propagates to every button, gradient, chart, icon and hover state.
-   ▸ Convert a hex to channels: #00937F → `0 147 127`.
-   ══════════════════════════════════════════════════════════════════════ */
-
-:root {
-  /* Primary brand — #006B5B. CTAs, highlights, data visualisation. */
-  --brand-50: 230 242 239;
-  --brand-100: 194 226 219;
-  --brand-200: 141 200 189;
-  --brand-300: 85 168 153;
-  --brand-400: 33 138 120;
-  --brand-500: 0 107 91;     /* #006B5B — exact brand value */
-  --brand-600: 0 90 77;
-  --brand-700: 0 72 61;
-  --brand-800: 0 56 48;
-  --brand-900: 0 43 37;
-
-  /* Secondary brand — #92C640. Gradient partner, accents, data points. */
-  --lime-50: 244 250 234;
-  --lime-100: 229 243 206;
-  --lime-200: 205 231 163;
-  --lime-300: 180 218 119;
-  --lime-400: 161 206 87;
-  --lime-500: 146 198 64;    /* #92C640 — exact brand value */
-  --lime-600: 125 172 51;
-  --lime-700: 100 138 40;
-  --lime-800: 77 106 31;
-  --lime-900: 59 82 24;
-
-  /* Dark corporate ground — a deep green-black, keyed to the primary so the
-     dark sections sit in the same family rather than fighting it. */
-  --ink-950: 4 18 15;
-  --ink-900: 7 29 24;
-  --ink-800: 12 43 36;
-  --ink-700: 19 58 49;
-  --ink-600: 28 76 65;
-
-  /* Neutrals — a whisper of green so they read as chosen, not defaulted */
-  --sand-25: 252 253 252;
-  --sand-50: 247 250 248;
-  --sand-100: 239 243 240;
-  --sand-200: 225 231 227;
-  --sand-300: 202 211 205;
-  --sand-400: 139 152 145;  /* decorative / non-text use only */
-  --sand-500: 95 109 103;   /* 5.3:1 on white */
-  --sand-600: 78 90 84;
-  --sand-700: 58 68 63;
-  --sand-800: 40 49 45;
-  --sand-900: 25 31 29;
-
-  /* Luminous accent for glows and data lines — the secondary, brightened */
-  --glow: 168 220 94;
-
-  /* Typography — Arabic swaps --font-body/--font-display via [dir="rtl"] */
-  --font-display: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
-  --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
-
-  --header-h: 76px;
-}
-
-[dir='rtl'] {
-  --font-display: 'IBM Plex Sans Arabic', 'Segoe UI', system-ui, sans-serif;
-  --font-body: 'IBM Plex Sans Arabic', 'Segoe UI', system-ui, sans-serif;
-}
+/* ------------------------------------------------------------------ */
+/*  Foundations                                                        */
+/* ------------------------------------------------------------------ */
 
 @layer base {
-  * {
-    @apply border-sand-200;
+  :root {
+    --font-serif: 'Cormorant', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --font-sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --gutter: clamp(1.25rem, 0.6rem + 3vw, 4rem);
+    --section-y: clamp(5rem, 3.5rem + 6vw, 10rem);
+    --header-h: 5rem;
+    color-scheme: light;
+  }
+
+  /* Arabic: Naskh for editorial headlines, Plex Sans Arabic for UI and body */
+  :root[lang='ar'] {
+    --font-serif: 'Noto Naskh Arabic', 'Amiri', serif;
+    --font-sans: 'IBM Plex Sans Arabic', system-ui, sans-serif;
   }
 
   html {
-    scroll-behavior: smooth;
-    scroll-padding-top: calc(var(--header-h) + 16px);
     -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    scroll-padding-top: calc(var(--header-h) + 1rem);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
   }
 
   body {
-    @apply bg-white text-ink-900 font-sans antialiased;
-    text-rendering: optimizeLegibility;
-    font-feature-settings: 'ss01' 1, 'cv01' 1;
-    overflow-x: hidden;
+    @apply bg-ivory-100 font-sans text-body text-charcoal-900 antialiased;
+    font-feature-settings: 'kern', 'liga';
   }
 
-  /* Arabic needs more leading; tracking is corrected in @layer utilities
-     below, where it can out-specify Tailwind's fontSize utilities. */
-  [dir='rtl'] body {
-    font-feature-settings: normal;
-    line-height: 1.85;
+  /* Arabic letterforms need more leading and no tracking */
+  :root[lang='ar'] body {
+    line-height: 1.9;
   }
-
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-display text-balance;
+  :root[lang='ar'] .tracking-eyebrow,
+  :root[lang='ar'] .text-eyebrow {
+    letter-spacing: 0;
   }
-
-  /* Visible, on-brand focus ring for keyboard users only */
-  :focus-visible {
-    @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-white rounded-[4px];
-  }
-
-  .on-dark :focus-visible {
-    @apply ring-glow ring-offset-ink-950;
+  :root[lang='ar'] .font-serif {
+    letter-spacing: 0;
+    line-height: 1.35;
+    font-weight: 500;
   }
 
   ::selection {
-    @apply bg-brand-500/20 text-ink-900;
+    @apply bg-bronze-200 text-charcoal-900;
+  }
+
+  :focus-visible {
+    outline: 2px solid theme('colors.bronze.500');
+    outline-offset: 3px;
+  }
+
+  img,
+  svg,
+  video {
+    display: block;
+    max-width: 100%;
   }
 }
 
+/* ------------------------------------------------------------------ */
+/*  Components                                                         */
+/* ------------------------------------------------------------------ */
+
 @layer components {
-  /* Page shell — consistent gutters at every breakpoint */
   .shell {
     @apply mx-auto w-full max-w-shell px-gutter;
   }
 
-  .shell-narrow {
-    @apply mx-auto w-full max-w-content px-gutter;
+  .eyebrow {
+    @apply font-sans text-eyebrow font-semibold uppercase text-bronze-600;
+  }
+  :root[lang='ar'] .eyebrow {
+    @apply text-caption normal-case;
   }
 
-  /* Hairline rule that reads as precision rather than decoration */
   .hairline {
-    @apply border-t border-sand-200;
+    @apply h-px w-full bg-charcoal-900/15;
   }
 
-  .on-dark .hairline {
-    @apply border-white/10;
+  /* Animated underline for text links */
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    transition: background-size 500ms cubic-bezier(0.22, 1, 0.36, 1);
   }
-}
-
-@layer utilities {
-  /* ── Arabic typography correction ──────────────────────────────────────
-     Tailwind's `text-display-*` utilities carry negative tracking and very
-     tight leading, both tuned for Latin display type. Applied to Arabic they
-     crowd the glyphs and clip ascenders. These selectors are deliberately one
-     step more specific than the utilities they override, and live in the same
-     layer so they win on specificity rather than on !important. */
-  [dir='rtl'] :is(h1, h2, h3, h4, h5, h6),
-  [dir='rtl'] .font-display {
-    letter-spacing: 0;
+  :root[dir='rtl'] .link-underline {
+    background-position: 100% 100%;
   }
-
-  [dir='rtl'] :is(h1, h2) {
-    line-height: 1.32;
+  .link-underline:hover,
+  .link-underline:focus-visible,
+  .group:hover .link-underline,
+  .link-underline[aria-current='page'] {
+    background-size: 100% 1px;
   }
 
-  [dir='rtl'] :is(h3, h4, h5, h6) {
-    line-height: 1.42;
+  /* Form controls: underline fields, editorial rather than boxed */
+  .field {
+    @apply block w-full border-0 border-b border-charcoal-900/25 bg-transparent px-0 py-3 text-body text-charcoal-900 placeholder:text-stone-500 transition-colors duration-400;
   }
-
-  .text-balance {
-    text-wrap: balance;
+  .field:focus {
+    @apply border-charcoal-900 outline-none ring-0;
   }
-
-  .text-pretty {
-    text-wrap: pretty;
+  .field[aria-invalid='true'] {
+    @apply border-[#9B2C2C];
   }
-
-  /* Logical-property helpers so RTL mirrors without duplicated rules */
-  .border-inline-start {
-    border-inline-start-width: 1px;
+  select.field {
+    @apply appearance-none bg-no-repeat pe-8;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%231E1D1B' stroke-width='1.2'/%3E%3C/svg%3E");
+    background-position: right 0.25rem center;
   }
-
-  .pad-inline-start {
-    padding-inline-start: 1.5rem;
-  }
-
-  /* Directional arrow: flips with the writing direction */
-  .rtl-flip {
-    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  [dir='rtl'] .rtl-flip {
-    transform: scaleX(-1);
-  }
-
-  .mask-fade-b {
-    -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
-    mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
-  }
-
-  .mask-fade-edges {
-    -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
-    mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  :root[dir='rtl'] select.field {
+    background-position: left 0.25rem center;
   }
 }
 
-/* ── Motion: everything below collapses under prefers-reduced-motion ── */
+/* ------------------------------------------------------------------ */
+/*  Motion                                                             */
+/*  Everything here is opt-in (`html.js`) and collapses under          */
+/*  prefers-reduced-motion, so content is never hidden without JS.     */
+/* ------------------------------------------------------------------ */
 
-.reveal {
-  opacity: 0;
-  transform: translate3d(0, 26px, 0);
-  transition:
-    opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: var(--reveal-delay, 0ms);
-  will-change: opacity, transform;
-}
-
-.reveal[data-visible='true'] {
-  opacity: 1;
-  transform: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
+@media (prefers-reduced-motion: no-preference) {
+  .js .reveal {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0);
+    transition:
+      opacity 1100ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 1100ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .js .reveal[data-visible='true'] {
+    opacity: 1;
+    transform: none;
   }
 
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
+  /* Masked image reveal: a curtain lifts off the frame */
+  .js .mask-wrap > .mask-reveal {
+    clip-path: inset(100% 0 0 0);
+    transition: clip-path 1400ms cubic-bezier(0.65, 0, 0.35, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .js .mask-wrap[data-visible='true'] > .mask-reveal {
+    clip-path: inset(0 0 0 0);
   }
 
-  .reveal {
-    opacity: 1 !important;
-    transform: none !important;
+  /* Headline lines rise from behind a mask */
+  .js .line-mask > span {
+    display: inline-block;
+    transform: translate3d(0, 105%, 0);
+    transition: transform 1200ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--line-delay, 0ms);
+  }
+  .js [data-visible='true'] .line-mask > span,
+  .js .line-mask[data-visible='true'] > span {
+    transform: none;
+  }
+
+  /* Slow drift on the hero frame */
+  .ken-burns {
+    animation: ken-burns 22s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  }
+
+  .page-enter {
+    animation: page-enter 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+.line-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+@keyframes ken-burns {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(1.1) translate3d(-1%, -1%, 0);
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Zoom inside a frame on hover (portfolio and service panels) */
+.zoom-frame {
+  overflow: hidden;
+}
+.zoom-frame > .zoom-target {
+  transition: transform 1400ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .group:hover .zoom-frame > .zoom-target,
+  .group:focus-visible .zoom-frame > .zoom-target {
+    transform: scale(1.05);
+  }
+}
+
+/* Directional glyphs flip in RTL */
+:root[dir='rtl'] .flip-rtl {
+  transform: scaleX(-1);
+}
+
+/* Hide scrollbars on horizontal rails while keeping them scrollable */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes scroll-cue {
+  0% {
+    transform: translateY(-100%);
+  }
+  60%,
+  100% {
+    transform: translateY(200%);
   }
 }

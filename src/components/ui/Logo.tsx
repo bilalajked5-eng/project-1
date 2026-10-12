@@ -1,38 +1,27 @@
-import { cn } from '@/lib/cn'
+import { cn } from '@/lib/hooks'
 
 /**
- * Atmaal wordmark.
+ * Projects World logo.
  *
- * ▸ REPLACING WITH THE MASTER ASSET: overwrite these two files —
- *     public/images/atmaal-logo.svg        (brand green, for light grounds)
- *     public/images/atmaal-logo-light.svg  (white, for dark grounds)
- *   No code change is needed; every usage (header, mobile menu, footer)
- *   renders through this component.
- *
- * The files currently shipped are a trace of the supplied wordmark: a
- * monoline geometric lowercase set with round terminals. They match the
- * proportions and colour, but they are a redraw, not the original outlines —
- * drop the master file in before the site goes live.
+ * Set `LOGO_SRC` (and `LOGO_SRC_LIGHT` for dark grounds) to the original
+ * logo files exported from the current website. Until then a neutral
+ * typographic name plate is shown. It is not a redesign of the logo and
+ * should not be used as one.
  */
+const LOGO_SRC = ''
+const LOGO_SRC_LIGHT = ''
 
-interface LogoProps {
-  /** `light` for dark backgrounds, `dark` for white ones. */
-  variant?: 'light' | 'dark'
-  className?: string
-}
-
-export function Logo({ variant = 'dark', className }: LogoProps) {
-  const src = variant === 'light' ? '/images/atmaal-logo-light.svg' : '/images/atmaal-logo.svg'
-
+export function Logo({ light, className }: { light?: boolean; className?: string }) {
+  const src = light ? LOGO_SRC_LIGHT || LOGO_SRC : LOGO_SRC
+  if (src) {
+    return <img src={src} alt="Projects World" width={180} height={48} className={cn('h-10 w-auto', className)} />
+  }
   return (
-    <img
-      src={src}
-      alt="Atmaal"
-      /* A fixed brand asset does not mirror in Arabic */
-      dir="ltr"
-      width={132}
-      height={29}
-      className={cn('h-7 w-auto shrink-0 select-none sm:h-8', className)}
-    />
+    <span className={cn('flex flex-col leading-none', light ? 'text-ivory-50' : 'text-charcoal-900', className)} dir="ltr">
+      <span className="font-['Cormorant',serif] text-[1.6rem] font-medium tracking-[0.04em]">Projects World</span>
+      <span className={cn('mt-1 text-[0.58rem] font-semibold uppercase tracking-[0.38em]', light ? 'text-bronze-300' : 'text-bronze-600')}>
+        Furnishing · Interiors
+      </span>
+    </span>
   )
 }

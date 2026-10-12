@@ -1,13 +1,14 @@
 {
-  "name": "atmaal-website",
+  "name": "projects-world-website",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs",
     "preview": "vite preview",
-    "typecheck": "tsc -b --noEmit"
+    "typecheck": "tsc -b --noEmit",
+    "audit:site": "node scripts/audit.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
