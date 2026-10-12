@@ -14,21 +14,21 @@ export function NotFoundPage() {
   return (
     <>
       <Seo title={t.notFound.meta.title} description={t.notFound.meta.description} path="/404/" noindex />
-      <section className="page-enter pb-section pt-[calc(var(--header-h)+5rem)] lg:pt-48">
-        <div className="shell max-w-4xl">
-          <p className="eyebrow mb-6">404</p>
-          <h1 className="font-serif text-display-2xl font-light">{t.notFound.title}</h1>
-          <p className="mt-8 max-w-prose text-lead text-stone-700">{t.notFound.text}</p>
-          <ul className="mt-10 flex flex-wrap gap-x-8 gap-y-3">
+      <section className="bg-ivory-200 py-section">
+        <div className="shell max-w-3xl text-center">
+          <p className="font-heading text-[6rem] font-extrabold leading-none text-bronze-600">404</p>
+          <h1 className="mt-4 font-heading text-display-xl font-extrabold">{t.notFound.title}</h1>
+          <p className="mx-auto mt-5 max-w-prose text-lead text-stone-600">{t.notFound.text}</p>
+          <ul className="mt-8 flex flex-wrap justify-center gap-3">
             {links.map((l) => (
               <li key={l.path}>
-                <Link to={href(l.path)} className="link-underline pb-1 font-medium">
+                <Link to={href(l.path)} className="btn btn-outline min-h-[2.75rem] bg-white">
                   {l.label}
                 </Link>
               </li>
             ))}
           </ul>
-          <Button to={href('/')} className="mt-12">
+          <Button to={href('/')} className="mt-8">
             {t.notFound.home}
           </Button>
         </div>

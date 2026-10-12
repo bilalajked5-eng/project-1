@@ -1,11 +1,12 @@
+import { Clock, Mail, MapPin, Phone } from 'lucide-react'
 import { useLanguage } from '@/i18n'
 import { company, whatsappLink } from '@/content/company'
 import { Seo } from '@/lib/seo'
 import { breadcrumbSchema, organizationSchema } from '@/lib/schema'
 import { track } from '@/lib/analytics'
-import { Breadcrumbs } from '@/components/sections/PageHero'
+import { PageHero } from '@/components/sections/PageHero'
 import { InquiryForm } from '@/components/sections/InquiryForm'
-import { MaskedHeading, Reveal } from '@/components/ui/Reveal'
+import { WhatsAppIcon } from '@/components/ui/Links'
 
 export function ContactPage() {
   const { t, tr, locale } = useLanguage()
@@ -16,6 +17,52 @@ export function ContactPage() {
     { label: t.nav.contact, path: '/contact/' },
   ]
 
+  const cards = [
+    {
+      icon: Phone,
+      title: t.common.call,
+      body: (
+        <div className="space-y-1">
+          {company.phones.map((p) => (
+            <a key={p.tel} href={`tel:${p.tel}`} dir="ltr" className="block font-semibold hover:text-bronze-600" onClick={() => track('click_to_call', { location: 'contact_page' })}>
+              {p.display}
+            </a>
+          ))}
+        </div>
+      ),
+    },
+    {
+      icon: WhatsAppIcon,
+      title: t.common.whatsapp,
+      body: (
+        <a
+          href={whatsappLink()}
+          target="_blank"
+          rel="noopener noreferrer"
+          dir="ltr"
+          className="font-semibold hover:text-bronze-600"
+          onClick={() => track('whatsapp_click', { location: 'contact_page' })}
+        >
+          {company.phones[0].display}
+        </a>
+      ),
+    },
+    {
+      icon: Mail,
+      title: t.common.email,
+      body: (
+        <a href={`mailto:${company.email}`} className="font-semibold hover:text-bronze-600" onClick={() => track('email_click', { location: 'contact_page' })}>
+          {company.email}
+        </a>
+      ),
+    },
+    {
+      icon: Clock,
+      title: t.common.hours,
+      body: <p className="font-semibold">{tr(company.hours.label)}</p>,
+    },
+  ]
+
   return (
     <>
       <Seo
@@ -24,96 +71,68 @@ export function ContactPage() {
         path="/contact/"
         jsonLd={[organizationSchema(locale), breadcrumbSchema(locale, crumbs.map((x) => ({ name: x.label, path: x.path })))]}
       />
+      <PageHero eyebrow={c.eyebrow} title={c.title} lead={c.lead} crumbs={crumbs} />
 
-      <section className="page-enter pb-section pt-[calc(var(--header-h)+2.5rem)] lg:pt-40">
-        <div className="shell">
-          <Breadcrumbs items={crumbs} />
-          <div className="mt-10 max-w-4xl lg:mt-14">
-            <p className="eyebrow mb-6">{c.eyebrow}</p>
-            <MaskedHeading as="h1" lines={[c.title]} className="font-serif text-display-2xl font-light" />
-            <Reveal delay={200}>
-              <p className="mt-8 max-w-prose text-lead text-stone-700">{c.lead}</p>
-            </Reveal>
+      <section className="relative z-10 -mt-10">
+        <ul className="shell grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {cards.map((card) => (
+            <li key={card.title} className="card flex gap-4 p-6">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-bronze-500 text-charcoal-950">
+                <card.icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 text-body-sm">
+                <h2 className="mb-1 text-caption font-bold uppercase tracking-[0.08em] text-stone-600">{card.title}</h2>
+                {card.body}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="py-section">
+        <div className="shell grid gap-10 lg:grid-cols-12">
+          <div id="inquiry" className="card scroll-mt-28 p-7 sm:p-10 lg:col-span-7">
+            <h2 className="font-heading text-display-md font-extrabold">{c.formTitle}</h2>
+            <p className="mb-8 mt-2 text-body-sm text-stone-600">{t.homeX.quoteText}</p>
+            <InquiryForm />
           </div>
 
-          <div className="mt-20 grid gap-16 lg:grid-cols-12 lg:gap-10">
-            {/* Direct contact */}
-            <aside className="lg:col-span-4">
-              <h2 className="eyebrow mb-6">{c.directTitle}</h2>
-              <ul className="border-t border-charcoal-900/15">
-                {company.phones.map((p) => (
-                  <li key={p.tel} className="border-b border-charcoal-900/15">
-                    <a
-                      href={`tel:${p.tel}`}
-                      className="group flex items-baseline justify-between gap-6 py-5"
-                      onClick={() => track('click_to_call', { location: 'contact_page' })}
-                    >
-                      <span className="text-caption uppercase tracking-[0.14em] text-stone-600">
-                        {t.common.call} · {tr(p.label)}
-                      </span>
-                      <span dir="ltr" className="font-serif text-[1.375rem]">
-                        <span className="link-underline">{p.display}</span>
-                      </span>
-                    </a>
-                  </li>
-                ))}
-                <li className="border-b border-charcoal-900/15">
-                  <a
-                    href={whatsappLink()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-baseline justify-between gap-6 py-5"
-                    onClick={() => track('whatsapp_click', { location: 'contact_page' })}
-                  >
-                    <span className="text-caption uppercase tracking-[0.14em] text-stone-600">{t.common.whatsapp}</span>
-                    <span dir="ltr" className="font-serif text-[1.375rem]">
-                      <span className="link-underline">{company.phones[0].display}</span>
-                    </span>
-                  </a>
-                </li>
-                <li className="border-b border-charcoal-900/15">
-                  <a
-                    href={`mailto:${company.email}`}
-                    className="group flex items-baseline justify-between gap-6 py-5"
-                    onClick={() => track('email_click', { location: 'contact_page' })}
-                  >
-                    <span className="text-caption uppercase tracking-[0.14em] text-stone-600">{t.common.email}</span>
-                    <span className="font-serif text-[1.25rem]">
-                      <span className="link-underline">{company.email}</span>
-                    </span>
-                  </a>
-                </li>
-              </ul>
-
-              <h2 className="eyebrow mb-4 mt-14">{c.officeTitle}</h2>
-              <address className="not-italic text-stone-700">
-                {tr(a.building)}
-                <br />
-                {tr(a.street)}
-                <br />
-                {tr(a.district)}, {tr(a.city)} {a.postalCode}
-                <br />
-                {tr(a.country)}
-              </address>
+          <aside className="space-y-6 lg:col-span-5">
+            <div className="overflow-hidden rounded-card bg-charcoal-900 text-white">
+              <div className="p-7">
+                <h2 className="flex items-center gap-2 font-heading text-[1.25rem] font-bold">
+                  <MapPin className="h-5 w-5 text-bronze-400" aria-hidden="true" />
+                  {c.officeTitle}
+                </h2>
+                <address className="mt-4 not-italic text-white/80">
+                  {tr(a.building)}
+                  <br />
+                  {tr(a.street)}
+                  <br />
+                  {tr(a.district)}, {tr(a.city)} {a.postalCode}
+                  <br />
+                  {tr(a.country)}
+                </address>
+                <a href={company.mapUrl} target="_blank" rel="noopener noreferrer" className="btn btn-gold mt-6">
+                  {t.common.directions}
+                </a>
+              </div>
+            </div>
+            <div className="card p-7">
+              <h2 className="font-heading text-[1.25rem] font-bold">{c.directTitle}</h2>
+              <p className="mt-2 text-body-sm text-stone-600">{t.homeX.faqText}</p>
               <a
-                href={company.mapUrl}
+                href={whatsappLink()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="link-underline mt-4 inline-block pb-1 text-caption font-semibold uppercase tracking-[0.16em]"
+                className="btn btn-whatsapp mt-6 w-full"
+                onClick={() => track('whatsapp_click', { location: 'contact_aside' })}
               >
-                {t.common.directions}
+                <WhatsAppIcon />
+                {t.homeX.ctaWhatsapp}
               </a>
-
-              <h2 className="eyebrow mb-4 mt-14">{t.common.hours}</h2>
-              <p className="text-stone-700">{tr(company.hours.label)}</p>
-            </aside>
-
-            {/* Inquiry form */}
-            <div id="inquiry" className="scroll-mt-32 lg:col-span-7 lg:col-start-6">
-              <h2 className="mb-10 font-serif text-display-lg font-light">{c.formTitle}</h2>
-              <InquiryForm />
             </div>
-          </div>
+          </aside>
         </div>
       </section>
     </>

@@ -8,17 +8,17 @@
 
 @layer base {
   :root {
-    --font-serif: 'Cormorant', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
-    --font-sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-heading: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
     --gutter: clamp(1.25rem, 0.6rem + 3vw, 4rem);
-    --section-y: clamp(5rem, 3.5rem + 6vw, 10rem);
-    --header-h: 5rem;
+    --section-y: clamp(4rem, 3rem + 4vw, 7rem);
+    --header-h: 4.75rem;
     color-scheme: light;
   }
 
   /* Arabic: Naskh for editorial headlines, Plex Sans Arabic for UI and body */
   :root[lang='ar'] {
-    --font-serif: 'Noto Naskh Arabic', 'Amiri', serif;
+    --font-heading: 'Cairo', 'IBM Plex Sans Arabic', system-ui, sans-serif;
     --font-sans: 'IBM Plex Sans Arabic', system-ui, sans-serif;
   }
 
@@ -47,10 +47,9 @@
   :root[lang='ar'] .text-eyebrow {
     letter-spacing: 0;
   }
-  :root[lang='ar'] .font-serif {
+  :root[lang='ar'] .font-heading {
     letter-spacing: 0;
-    line-height: 1.35;
-    font-weight: 500;
+    line-height: 1.4;
   }
 
   ::selection {
@@ -79,8 +78,48 @@
     @apply mx-auto w-full max-w-shell px-gutter;
   }
 
+  /* Section label: short gold rule + uppercase text */
   .eyebrow {
-    @apply font-sans text-eyebrow font-semibold uppercase text-bronze-600;
+    @apply inline-flex items-center gap-3 font-sans text-eyebrow font-bold uppercase text-bronze-600;
+  }
+  .eyebrow::before {
+    content: '';
+    @apply block h-[2px] w-7 shrink-0 bg-bronze-500;
+  }
+  .on-dark .eyebrow,
+  .eyebrow.on-dark {
+    @apply text-bronze-300;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex min-h-[3rem] items-center justify-center gap-2.5 rounded-btn px-6 text-body-sm font-semibold transition-[background-color,color,border-color,box-shadow,transform] duration-300 ease-silk;
+  }
+  .btn-gold {
+    @apply bg-bronze-500 text-charcoal-950 hover:bg-bronze-400 hover:shadow-lift;
+  }
+  .btn-dark {
+    @apply bg-charcoal-900 text-white hover:bg-charcoal-700;
+  }
+  .btn-outline {
+    @apply border border-charcoal-900/20 text-charcoal-900 hover:border-charcoal-900 hover:bg-charcoal-900 hover:text-white;
+  }
+  .btn-outline-light {
+    @apply border border-white/40 text-white hover:border-white hover:bg-white hover:text-charcoal-900;
+  }
+  .btn-whatsapp {
+    @apply bg-[#157A3C] text-white hover:bg-[#10632F];
+  }
+
+  /* Cards */
+  .card {
+    @apply rounded-card border border-charcoal-900/[0.07] bg-white shadow-card transition-[box-shadow,transform,border-color] duration-400 ease-silk;
+  }
+  .card-hover {
+    @apply hover:-translate-y-1 hover:border-bronze-500/40 hover:shadow-lift;
+  }
+  .icon-tile {
+    @apply flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-bronze-500/15 text-bronze-600;
   }
   :root[lang='ar'] .eyebrow {
     @apply text-caption normal-case;
@@ -110,10 +149,10 @@
 
   /* Form controls: underline fields, editorial rather than boxed */
   .field {
-    @apply block w-full border-0 border-b border-charcoal-900/25 bg-transparent px-0 py-3 text-body text-charcoal-900 placeholder:text-stone-500 transition-colors duration-400;
+    @apply mt-2 block w-full rounded-btn border border-charcoal-900/15 bg-white px-4 py-3 text-body-sm text-charcoal-900 placeholder:text-stone-500 transition-colors duration-300;
   }
   .field:focus {
-    @apply border-charcoal-900 outline-none ring-0;
+    @apply border-bronze-500 outline-none ring-2 ring-bronze-500/25;
   }
   .field[aria-invalid='true'] {
     @apply border-[#9B2C2C];
@@ -121,10 +160,10 @@
   select.field {
     @apply appearance-none bg-no-repeat pe-8;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%231E1D1B' stroke-width='1.2'/%3E%3C/svg%3E");
-    background-position: right 0.25rem center;
+    background-position: right 1rem center;
   }
   :root[dir='rtl'] select.field {
-    background-position: left 0.25rem center;
+    background-position: left 1rem center;
   }
 }
 
@@ -239,5 +278,14 @@
   60%,
   100% {
     transform: translateY(200%);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
   }
 }

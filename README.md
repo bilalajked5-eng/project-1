@@ -47,15 +47,22 @@ npm run audit:site   # a11y/layout audit against the preview server
 | Interface and page copy (EN + AR) | `src/i18n/ui.ts` |
 | Design tokens | `tailwind.config.ts`, `src/styles/globals.css` |
 
-### Images
+### Design and images
 
-No photography could be pulled from the live site during the build, and
-stock photos are deliberately **not** used for project pages (they could be
-mistaken for client work). Every image slot instead renders an
-art-directed line-and-tone architectural illustration (`src/components/art/Art.tsx`)
-at the exact size the photograph will occupy. To switch a slot to a real
-photo, set `src`, `width`, `height` (and ideally `srcSet`) on it. Nothing
-else changes, and the layout will not shift.
+The layout follows the structure of the agreed reference (fsakcontracting.com):
+contact top bar, sticky header with a quote button, photo hero with a quick
+quote form, overlapping stats card, brand slider, icon service cards, a dark
+sectors band, process cards, project tiles, a dark "why choose" band, FAQ,
+a CTA banner and a four-column footer with a floating WhatsApp button.
+Palette: charcoal + gold (`tailwind.config.ts`); type: Archivo + Inter
+(Cairo + IBM Plex Sans Arabic in Arabic).
+
+General imagery (hero, services, section photos) uses licensed Unsplash
+photos via `src/content/stock.ts`. Project case studies deliberately do
+**not** use stock photos; they show an art-directed illustration until real
+project photos are supplied. If any photo fails to load, the illustration
+renders in its place, so a page never shows a broken image. To use your
+own photo anywhere, set `src`, `width`, `height` on that slot.
 
 ### Forms and tracking
 

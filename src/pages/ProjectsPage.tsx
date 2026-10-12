@@ -1,21 +1,14 @@
 import { useState } from 'react'
+import { Building2 } from 'lucide-react'
 import { useLanguage } from '@/i18n'
 import { categoryLabels, projectRoster, projects, type ProjectCategory } from '@/content/projects'
 import { Seo } from '@/lib/seo'
 import { breadcrumbSchema } from '@/lib/schema'
 import { cn } from '@/lib/hooks'
 import { PageHero } from '@/components/sections/PageHero'
-import { ProjectCard } from '@/components/sections/ProjectCard'
+import { ProjectTile, SectionHead } from '@/components/sections/Cards'
 import { CtaBand } from '@/components/sections/CtaBand'
 import { Reveal } from '@/components/ui/Reveal'
-
-/** Alternating column placements give the grid an editorial, staggered rhythm. */
-const placements = [
-  { col: 'lg:col-span-7', ratio: 'aspect-[4/3]' },
-  { col: 'lg:col-span-4 lg:col-start-9 lg:mt-36', ratio: 'aspect-[4/5]' },
-  { col: 'lg:col-span-5 lg:col-start-2', ratio: 'aspect-[4/5]' },
-  { col: 'lg:col-span-6 lg:col-start-7 lg:mt-24', ratio: 'aspect-[5/4]' },
-]
 
 export function ProjectsPage() {
   const { t, tr, locale } = useLanguage()
@@ -31,11 +24,11 @@ export function ProjectsPage() {
   return (
     <>
       <Seo title={p.meta.title} description={p.meta.description} path="/our-projects/" jsonLd={[breadcrumbSchema(locale, crumbs.map((c) => ({ name: c.label, path: c.path })))]} />
-      <PageHero eyebrow={p.eyebrow} title={p.title} lead={p.lead} crumbs={crumbs} layout="text" />
+      <PageHero eyebrow={p.eyebrow} title={p.title} lead={p.lead} crumbs={crumbs} />
 
-      <section className="pb-section pt-16">
+      <section className="py-section">
         <div className="shell">
-          <div role="group" aria-label={p.labels.category} className="no-scrollbar -mx-gutter flex gap-2 overflow-x-auto px-gutter pb-2">
+          <div role="group" aria-label={p.labels.category} className="flex flex-wrap gap-2">
             {(['all', ...categories] as const).map((c) => (
               <button
                 key={c}
@@ -43,8 +36,8 @@ export function ProjectsPage() {
                 aria-pressed={filter === c}
                 onClick={() => setFilter(c)}
                 className={cn(
-                  'shrink-0 border px-5 py-2.5 text-caption font-semibold uppercase tracking-[0.14em] transition-colors duration-400',
-                  filter === c ? 'border-charcoal-900 bg-charcoal-900 text-ivory-50' : 'border-charcoal-900/20 text-charcoal-900 hover:border-charcoal-900',
+                  'rounded-full border px-5 py-2.5 text-body-sm font-semibold transition-colors',
+                  filter === c ? 'border-bronze-500 bg-bronze-500 text-charcoal-950' : 'border-charcoal-900/15 bg-white hover:border-charcoal-900',
                 )}
               >
                 {c === 'all' ? p.all : tr(categoryLabels[c])}
@@ -52,40 +45,35 @@ export function ProjectsPage() {
             ))}
           </div>
 
-          <ul className="mt-16 grid gap-16 lg:grid-cols-12 lg:gap-x-10 lg:gap-y-28" aria-live="polite">
-            {visible.map((project, i) => {
-              const place = placements[i % placements.length]
-              return (
-                <li key={project.slug} className={place.col}>
-                  <Reveal>
-                    <ProjectCard project={project} ratio={place.ratio} size={i % 4 === 0 ? 'lg' : 'md'} headingLevel={2} />
-                  </Reveal>
-                </li>
-              )
-            })}
+          <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-live="polite">
+            {visible.map((project, i) => (
+              <Reveal as="li" key={project.slug} delay={(i % 3) * 80}>
+                <ProjectTile project={project} tall headingLevel={2} />
+              </Reveal>
+            ))}
           </ul>
         </div>
       </section>
 
-      <section className="border-t border-charcoal-900/10 bg-ivory-200 py-section" aria-labelledby="roster-title">
-        <div className="shell grid gap-12 lg:grid-cols-12 lg:gap-10">
-          <div className="lg:col-span-4">
-            <h2 id="roster-title" className="font-serif text-display-lg font-light">
-              {p.rosterTitle}
-            </h2>
-            <p className="mt-6 text-body-sm text-stone-700">{p.rosterText}</p>
-          </div>
-          <ul className="grid border-t border-charcoal-900/15 sm:grid-cols-2 lg:col-span-8">
+      <section className="bg-ivory-200 py-section" aria-labelledby="roster-title">
+        <div className="shell">
+          <SectionHead id="roster-title" eyebrow={p.eyebrow} title={p.rosterTitle} text={p.rosterText} />
+          <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {projectRoster.map((r) => (
-              <li key={r.en} className="border-b border-charcoal-900/15 py-5 font-serif text-[1.375rem] leading-snug sm:pe-6">
-                {tr(r)}
+              <li key={r.en} className="card flex items-center gap-4 p-5">
+                <span className="icon-tile h-11 w-11">
+                  <Building2 className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span className="font-heading text-[1.0625rem] font-bold">{tr(r)}</span>
               </li>
             ))}
           </ul>
         </div>
       </section>
 
-      <CtaBand title={p.ctaTitle} text={p.ctaText} />
+      <div className="pt-section">
+        <CtaBand title={p.ctaTitle} text={p.ctaText} />
+      </div>
     </>
   )
 }

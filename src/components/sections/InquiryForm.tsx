@@ -124,7 +124,7 @@ export function InquiryForm({ initialTopic }: { initialTopic?: string }) {
   if (status === 'sent' || status === 'fallback') {
     return (
       <div role="status" className="border-t border-charcoal-900/20 pt-10">
-        <p className="font-serif text-display-md">{status === 'sent' ? f.successTitle : f.fallbackTitle}</p>
+        <p className="font-heading text-display-md">{status === 'sent' ? f.successTitle : f.fallbackTitle}</p>
         <p className="mt-4 max-w-prose text-stone-700">{status === 'sent' ? f.successText : f.fallbackText}</p>
         <a
           href={whatsappLink()}
@@ -145,7 +145,7 @@ export function InquiryForm({ initialTopic }: { initialTopic?: string }) {
     [errors[k] && `${id(k)}-error`, hint && `${id(k)}-hint`].filter(Boolean).join(' ') || undefined
 
   const label = (k: Field, text: string, required = true) => (
-    <label htmlFor={id(k)} className="block text-caption font-semibold uppercase tracking-[0.14em] text-stone-700">
+    <label htmlFor={id(k)} className="block text-caption font-semibold text-stone-700">
       {text}
       {required && <span className="sr-only"> ({f.required})</span>}
     </label>
@@ -284,7 +284,7 @@ export function InquiryForm({ initialTopic }: { initialTopic?: string }) {
             onChange={(e) => set('consent', e.target.checked)}
             aria-invalid={!!errors.consent}
             aria-describedby={describedBy('consent')}
-            className="mt-1 h-4 w-4 shrink-0 accent-charcoal-900"
+            className="mt-1 h-4 w-4 shrink-0 accent-bronze-600"
           />
           <span>{f.consent}</span>
         </label>
@@ -301,7 +301,7 @@ export function InquiryForm({ initialTopic }: { initialTopic?: string }) {
         type="submit"
         disabled={status === 'sending'}
         className={cn(
-          'group inline-flex min-h-[3.25rem] items-center gap-4 bg-charcoal-900 px-8 text-caption font-semibold uppercase tracking-[0.16em] text-ivory-50 transition-colors duration-400 hover:bg-charcoal-700',
+          'btn btn-gold group w-full sm:w-auto',
           status === 'sending' && 'cursor-wait opacity-70',
         )}
       >

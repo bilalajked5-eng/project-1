@@ -59,7 +59,7 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
               <Link
                 to={href(item.path)}
                 aria-current={isActive(item, base, serviceSlugs) ? 'page' : undefined}
-                className="flex items-baseline justify-between py-4 font-serif text-[2rem] leading-tight aria-[current=page]:text-bronze-300"
+                className="flex items-baseline justify-between py-4 font-heading text-[1.375rem] font-bold leading-tight aria-[current=page]:text-bronze-300"
               >
                 {t.nav[item.key]}
                 <span className="font-sans text-caption text-ivory-50/60">0{i + 1}</span>
@@ -88,7 +88,7 @@ export function MobileMenu({ open, onClose }: { open: boolean; onClose: () => vo
       <div className="shell pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <Link
           to={href('/contact/')}
-          className="flex min-h-[3.25rem] w-full items-center justify-center bg-ivory-50 text-caption font-semibold uppercase tracking-[0.16em] text-charcoal-900"
+          className="btn btn-gold w-full"
         >
           {t.nav.cta}
         </Link>

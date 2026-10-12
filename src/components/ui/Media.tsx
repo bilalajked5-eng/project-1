@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import type { MediaSlot } from '@/content/types'
 import { useLanguage } from '@/i18n'
 import { cn, useParallax } from '@/lib/hooks'
@@ -32,9 +33,20 @@ export function Media({ slot, className, ratio, sizes = '100vw', priority, zoom,
   const { tr } = useLanguage()
   const { ref, y } = useParallax<HTMLDivElement>(parallax ? 0.06 : 0)
   const alt = decorative ? '' : tr(slot.alt)
+  const imgRef = useRef<HTMLImageElement>(null)
+  const [failed, setFailed] = useState(false)
 
-  const inner = slot.src ? (
+  // A photo that fails (offline CDN, removed file) falls back to the art
+  // composition. Prerendered images may fail before hydration, so check once.
+  useEffect(() => {
+    const img = imgRef.current
+    if (img && img.complete && img.naturalWidth === 0) setFailed(true)
+  }, [slot.src])
+
+  const inner = slot.src && !failed ? (
     <img
+      ref={imgRef}
+      onError={() => setFailed(true)}
       src={slot.src}
       srcSet={slot.srcSet}
       sizes={slot.srcSet ? sizes : undefined}

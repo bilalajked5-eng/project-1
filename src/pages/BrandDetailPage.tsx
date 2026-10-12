@@ -1,13 +1,16 @@
 import { Link } from 'react-router-dom'
+import { Globe2, Layers, Sofa } from 'lucide-react'
 import { useLanguage } from '@/i18n'
 import { brands, countryLabels, focusLabels, getBrand } from '@/content/brands'
 import { getService } from '@/content/services'
+import { media } from '@/content/media'
+import { whatsappLink } from '@/content/company'
 import { Seo } from '@/lib/seo'
 import { breadcrumbSchema } from '@/lib/schema'
-import { Breadcrumbs } from '@/components/sections/PageHero'
+import { PageHero } from '@/components/sections/PageHero'
 import { BrandGrid } from '@/components/sections/BrandGrid'
+import { SectionHead } from '@/components/sections/Cards'
 import { Button } from '@/components/ui/Links'
-import { MaskedHeading, Reveal } from '@/components/ui/Reveal'
 
 export function BrandDetailPage({ slug }: { slug: string }) {
   const { t, tr, href, locale } = useLanguage()
@@ -21,74 +24,89 @@ export function BrandDetailPage({ slug }: { slug: string }) {
     { label: t.nav.brands, path: '/our-brands/' },
     { label: brand.name, path: `/brands/${slug}/` },
   ]
-  const others = brands.filter((x) => x.slug !== slug && x.focus === brand.focus).concat(brands.filter((x) => x.slug !== slug && x.focus !== brand.focus)).slice(0, 4)
+  const others = brands
+    .filter((x) => x.slug !== slug && x.focus === brand.focus)
+    .concat(brands.filter((x) => x.slug !== slug && x.focus !== brand.focus))
+    .slice(0, 4)
 
   return (
     <>
       <Seo title={meta.title} description={meta.description} path={`/brands/${slug}/`} jsonLd={[breadcrumbSchema(locale, crumbs.map((c) => ({ name: c.label, path: c.path })))]} />
+      <PageHero eyebrow={b.eyebrow} title={brand.name} crumbs={crumbs} media={media.brands} />
 
-      <section className="page-enter pb-section pt-[calc(var(--header-h)+2.5rem)] lg:pt-40">
-        <div className="shell">
-          <Breadcrumbs items={crumbs} />
-          <div className="mt-14 grid gap-14 lg:grid-cols-12 lg:gap-10">
-            <div className="lg:col-span-7">
-              <p className="eyebrow mb-6">{b.eyebrow}</p>
-              <div dir="ltr" className="rtl:text-right">
-                <MaskedHeading as="h1" lines={[brand.name]} className="font-['Cormorant',serif] text-display-3xl font-light" />
-              </div>
-              <Reveal delay={200}>
-                <p className="mt-10 max-w-prose text-lead text-stone-700">{b.detailLead(brand.name, country, focus)}</p>
-              </Reveal>
-              <Reveal delay={300} className="mt-12">
-                <Button to={href('/contact/') + '#inquiry'} track={`brand_${slug}`}>
-                  {b.ask}
-                </Button>
-              </Reveal>
+      <section className="py-section">
+        <div className="shell grid gap-12 lg:grid-cols-12">
+          <div className="lg:col-span-7">
+            <p className="text-lead text-charcoal-900">{b.detailLead(brand.name, country, focus)}</p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Button to={href('/contact/') + '#inquiry'} track={`brand_${slug}`}>
+                {b.ask}
+              </Button>
+              <Button to={whatsappLink(`${brand.name} – Projects World`)} variant="whatsapp" icon="whatsapp" track={`brand_${slug}_whatsapp`}>
+                {t.homeX.whatsappCta}
+              </Button>
             </div>
-            <Reveal delay={150} className="lg:col-span-4 lg:col-start-9">
-              <div className="flex aspect-square items-center justify-center border border-charcoal-900/15 bg-ivory-50 p-10">
+          </div>
+          <div className="lg:col-span-5">
+            <div className="card p-7">
+              <div className="flex aspect-[2/1] items-center justify-center rounded-btn bg-ivory-200">
                 {brand.logo ? (
-                  <img src={brand.logo} alt={`${brand.name} logo`} className="max-h-24 w-auto" />
+                  <img src={brand.logo} alt={`${brand.name} logo`} className="max-h-16 w-auto" />
                 ) : (
-                  <span aria-hidden="true" dir="ltr" className="text-center font-['Cormorant',serif] text-[2.75rem] leading-none text-charcoal-800">
+                  <span aria-hidden="true" dir="ltr" className="font-heading text-[1.75rem] font-extrabold uppercase tracking-[0.06em]">
                     {brand.name}
                   </span>
                 )}
               </div>
-              <dl className="mt-8 border-t border-charcoal-900/15">
-                <div className="flex justify-between gap-6 border-b border-charcoal-900/15 py-4 text-body-sm">
-                  <dt className="text-stone-600">{b.origin}</dt>
-                  <dd className="font-medium">{country}</dd>
+              <dl className="mt-6 space-y-4">
+                <div className="flex items-start gap-4">
+                  <span className="icon-tile h-11 w-11">
+                    <Globe2 className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <dt className="text-caption font-semibold uppercase tracking-[0.08em] text-stone-600">{b.origin}</dt>
+                    <dd className="font-semibold">{country}</dd>
+                  </div>
                 </div>
-                <div className="flex justify-between gap-6 border-b border-charcoal-900/15 py-4 text-body-sm">
-                  <dt className="text-stone-600">{b.focus}</dt>
-                  <dd className="font-medium">{focus}</dd>
+                <div className="flex items-start gap-4">
+                  <span className="icon-tile h-11 w-11">
+                    <Sofa className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <dt className="text-caption font-semibold uppercase tracking-[0.08em] text-stone-600">{b.focus}</dt>
+                    <dd className="font-semibold">{focus}</dd>
+                  </div>
                 </div>
-                <div className="border-b border-charcoal-900/15 py-4 text-body-sm">
-                  <dt className="text-stone-600">{b.usedFor}</dt>
-                  <dd className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
-                    {brand.services.map((s) => {
-                      const svc = getService(s)
-                      return svc ? (
-                        <Link key={s} to={href(`/${s}/`)} className="link-underline font-medium">
-                          {tr(svc.title)}
-                        </Link>
-                      ) : null
-                    })}
-                  </dd>
+                <div className="flex items-start gap-4">
+                  <span className="icon-tile h-11 w-11">
+                    <Layers className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <dt className="text-caption font-semibold uppercase tracking-[0.08em] text-stone-600">{b.usedFor}</dt>
+                    <dd className="mt-1 flex flex-wrap gap-2">
+                      {brand.services.map((s) => {
+                        const svc = getService(s)
+                        return svc ? (
+                          <Link key={s} to={href(`/${s}/`)} className="rounded-full bg-ivory-200 px-3 py-1 text-caption font-semibold hover:bg-bronze-500">
+                            {tr(svc.title)}
+                          </Link>
+                        ) : null
+                      })}
+                    </dd>
+                  </div>
                 </div>
               </dl>
-            </Reveal>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="border-t border-charcoal-900/10 bg-ivory-200 py-section" aria-labelledby="other-brands">
+      <section className="bg-ivory-200 py-section" aria-labelledby="other-brands">
         <div className="shell">
-          <h2 id="other-brands" className="mb-12 font-serif text-display-lg font-light">
-            {b.other}
-          </h2>
-          <BrandGrid brands={others} compact />
+          <SectionHead id="other-brands" eyebrow={b.eyebrow} title={b.other} />
+          <div className="mt-12">
+            <BrandGrid brands={others} />
+          </div>
         </div>
       </section>
     </>

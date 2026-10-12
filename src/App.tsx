@@ -6,7 +6,7 @@ import { projects } from '@/content/projects'
 import { brands } from '@/content/brands'
 import { redirects } from '@/routes'
 import { Header } from '@/components/layout/Header'
-import { Footer } from '@/components/layout/Footer'
+import { Footer, WhatsAppFloat } from '@/components/layout/Footer'
 import { Home } from '@/pages/Home'
 import { AboutPage } from '@/pages/AboutPage'
 import { ProcessPage } from '@/pages/ProcessPage'
@@ -104,6 +104,7 @@ function Shell() {
         {page ?? <NotFoundPage />}
       </main>
       <Footer />
+      <WhatsAppFloat />
     </>
   )
 }

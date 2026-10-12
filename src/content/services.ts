@@ -1,4 +1,5 @@
 import type { L, MediaSlot } from './types'
+import { stock } from './stock'
 
 /**
  * Services and sectors.
@@ -133,11 +134,13 @@ export const services: Service[] = [
       },
     ],
     hero: {
+      ...stock('chairStudio'),
       art: 'chair',
       tone: 'stone',
       alt: { en: 'Upholstered armchair in a quiet studio setting', ar: 'كرسي منجّد في إطار هادئ' },
     },
     detail: {
+      ...stock('sofaDetail'),
       art: 'materials',
       tone: 'ivory',
       alt: { en: 'Wood, stone and fabric samples for furniture finishes', ar: 'عيّنات خشب وحجر وقماش لتشطيبات الأثاث' },
@@ -216,11 +219,13 @@ export const services: Service[] = [
       },
     ],
     hero: {
+      ...stock('livingSofa'),
       art: 'sofa',
       tone: 'ivory',
       alt: { en: 'Living room with a long sofa, side table and floor lamp', ar: 'غرفة معيشة بأريكة طويلة وطاولة جانبية ومصباح أرضي' },
     },
     detail: {
+      ...stock('interiorDesign'),
       art: 'plan',
       tone: 'stone',
       alt: { en: 'Furniture layout drawn on a floor plan', ar: 'مخطط توزيع الأثاث على المسقط الأفقي' },
@@ -300,11 +305,13 @@ export const services: Service[] = [
       ],
     },
     hero: {
+      ...stock('office'),
       art: 'office',
       tone: 'stone',
       alt: { en: 'Boardroom with a long table, chairs and pendant lights', ar: 'قاعة اجتماعات بطاولة طويلة وكراسٍ وإضاءة معلّقة' },
     },
     detail: {
+      ...stock('officeChair'),
       art: 'plan',
       tone: 'ivory',
       alt: { en: 'Office floor plan with workstations and meeting rooms', ar: 'مسقط مكتب بمحطات عمل وغرف اجتماعات' },
@@ -399,11 +406,13 @@ export const services: Service[] = [
       },
     ],
     hero: {
+      ...stock('hotelRoom'),
       art: 'hotel',
       tone: 'charcoal',
       alt: { en: 'Hotel suite with an upholstered bed and wall lights', ar: 'جناح فندقي بسرير منجّد وإضاءة جدارية' },
     },
     detail: {
+      ...stock('restaurant'),
       art: 'dining',
       tone: 'ivory',
       alt: { en: 'Restaurant dining table with chairs under a pendant light', ar: 'طاولة طعام في مطعم مع كراسٍ تحت إضاءة معلّقة' },
@@ -468,11 +477,13 @@ export const services: Service[] = [
       },
     ],
     hero: {
+      ...stock('officeMeeting'),
       art: 'plan',
       tone: 'charcoal',
       alt: { en: 'Technical drawing with dimension lines', ar: 'رسم فني بخطوط الأبعاد' },
     },
     detail: {
+      ...stock('office'),
       art: 'colonnade',
       tone: 'stone',
       alt: { en: 'Colonnade in perspective', ar: 'رواق أعمدة في منظور' },
@@ -524,11 +535,13 @@ export const services: Service[] = [
       },
     ],
     hero: {
+      ...stock('villa'),
       art: 'colonnade',
       tone: 'ivory',
       alt: { en: 'Architectural colonnade with soft daylight', ar: 'رواق معماري بإضاءة نهارية هادئة' },
     },
     detail: {
+      ...stock('lounge'),
       art: 'lounge',
       tone: 'stone',
       alt: { en: 'Finished lounge with an arched window', ar: 'صالة مكتملة بنافذة مقوّسة' },
@@ -606,11 +619,13 @@ export const services: Service[] = [
       },
     ],
     hero: {
+      ...stock('dining'),
       art: 'dining',
       tone: 'stone',
       alt: { en: 'Formal dining room with a chandelier', ar: 'غرفة طعام رسمية بثريا' },
     },
     detail: {
+      ...stock('bedroom'),
       art: 'lounge',
       tone: 'ivory',
       alt: { en: 'Lounge chair beside an arched window', ar: 'كرسي استرخاء بجانب نافذة مقوّسة' },
@@ -668,11 +683,13 @@ export const services: Service[] = [
       },
     ],
     hero: {
+      ...stock('lounge'),
       art: 'lounge',
       tone: 'bronze',
       alt: { en: 'Styled lounge with a floor lamp and arched window', ar: 'صالة منسّقة بمصباح أرضي ونافذة مقوّسة' },
     },
     detail: {
+      ...stock('materials'),
       art: 'materials',
       tone: 'stone',
       alt: { en: 'Material and finish samples arranged on a table', ar: 'عيّنات مواد وتشطيبات على طاولة' },

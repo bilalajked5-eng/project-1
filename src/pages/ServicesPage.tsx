@@ -5,6 +5,8 @@ import { Seo } from '@/lib/seo'
 import { breadcrumbSchema } from '@/lib/schema'
 import { PageHero } from '@/components/sections/PageHero'
 import { ServicePanels } from '@/components/sections/ServicePanels'
+import { SectionHead } from '@/components/sections/Cards'
+import { ProcessTimeline } from '@/components/sections/Process'
 import { CtaBand } from '@/components/sections/CtaBand'
 import { Media } from '@/components/ui/Media'
 import { Arrow } from '@/components/ui/Links'
@@ -34,7 +36,7 @@ export function ServicesPage() {
         path="/services/"
         jsonLd={[breadcrumbSchema(locale, crumbs.map((c) => ({ name: c.label, path: c.path })))]}
       />
-      <PageHero eyebrow={s.eyebrow} title={s.title} lead={s.lead} crumbs={crumbs} layout="text" />
+      <PageHero eyebrow={s.eyebrow} title={s.title} lead={s.lead} crumbs={crumbs} />
 
       <section className="py-section">
         <div className="shell">
@@ -44,22 +46,30 @@ export function ServicesPage() {
 
       <section className="bg-ivory-200 py-section" aria-labelledby="sectors-title">
         <div className="shell">
-          <p className="eyebrow mb-6">{s.sectorsEyebrow}</p>
-          <h2 id="sectors-title" className="font-serif text-display-xl font-light">
-            {s.sectorsTitle}
-          </h2>
-          <ul className="mt-16 grid gap-px bg-charcoal-900/15 sm:grid-cols-2 lg:grid-cols-4">
+          <SectionHead id="sectors-title" eyebrow={s.sectorsEyebrow} title={s.sectorsTitle} />
+          <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {sectorLinks.map((sec, i) => (
-              <Reveal as="li" key={sec.slug} delay={i * 90} className="bg-ivory-200">
-                <Link to={href(`/${sec.slug}/`)} className="group block p-6 lg:p-8">
-                  <Media slot={sec.hero} ratio="aspect-[4/5]" zoom decorative />
-                  <h3 className="mt-6 font-serif text-[1.5rem] leading-snug">{tr(sec.title)}</h3>
-                  <p className="mt-2 text-body-sm text-stone-700">{tr(sec.short)}</p>
-                  <Arrow className="mt-5 transition-transform duration-400 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+              <Reveal as="li" key={sec.slug} delay={i * 80}>
+                <Link to={href(`/${sec.slug}/`)} className="card card-hover group block overflow-hidden">
+                  <Media slot={sec.hero} ratio="aspect-[4/3]" zoom decorative sizes="(min-width: 1024px) 25vw, 50vw" />
+                  <div className="p-6">
+                    <h3 className="font-heading text-[1.1875rem] font-bold">{tr(sec.title)}</h3>
+                    <p className="mt-2 text-body-sm text-stone-600">{tr(sec.short)}</p>
+                    <Arrow className="mt-4 text-bronze-600 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+                  </div>
                 </Link>
               </Reveal>
             ))}
           </ul>
+        </div>
+      </section>
+
+      <section className="py-section" aria-labelledby="process-title">
+        <div className="shell">
+          <SectionHead id="process-title" eyebrow={t.homeX.processEyebrow} title={t.homeX.processTitle} text={t.homeX.processText} align="center" />
+          <div className="mt-12">
+            <ProcessTimeline />
+          </div>
         </div>
       </section>
 

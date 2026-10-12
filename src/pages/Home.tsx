@@ -1,285 +1,373 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Building2, CheckCircle2, Gem, Hotel, Home as HomeIcon, LayoutGrid, Phone, Ruler, Store, Truck } from 'lucide-react'
 import { useLanguage } from '@/i18n'
 import { media } from '@/content/media'
-import { company } from '@/content/company'
+import { company, whatsappLink } from '@/content/company'
 import { coreServices } from '@/content/services'
 import { featuredProjects } from '@/content/projects'
 import { brands } from '@/content/brands'
 import { Seo } from '@/lib/seo'
-import { organizationSchema, websiteSchema } from '@/lib/schema'
+import { organizationSchema, websiteSchema, faqSchema } from '@/lib/schema'
+import { cn, useInView, usePrefersReducedMotion } from '@/lib/hooks'
+import { track } from '@/lib/analytics'
 import { Media } from '@/components/ui/Media'
-import { ArrowLink, Button } from '@/components/ui/Links'
-import { MaskedHeading, Reveal } from '@/components/ui/Reveal'
-import { ServicePanels } from '@/components/sections/ServicePanels'
-import { ProjectCard } from '@/components/sections/ProjectCard'
-import { BrandGrid } from '@/components/sections/BrandGrid'
-import { ProcessTimeline } from '@/components/sections/Process'
+import { Arrow, Button } from '@/components/ui/Links'
+import { Reveal } from '@/components/ui/Reveal'
+import { QuickQuote } from '@/components/sections/QuickQuote'
+import { ProjectTile, SectionHead, ServiceCard } from '@/components/sections/Cards'
 import { CtaBand } from '@/components/sections/CtaBand'
+
+/** Number that counts up once it scrolls into view. */
+function Counter({ value, suffix, count }: { value: number; suffix: string; count: boolean }) {
+  const { ref, inView } = useInView<HTMLSpanElement>()
+  const reduced = usePrefersReducedMotion()
+  const [n, setN] = useState(count ? 0 : value)
+
+  useEffect(() => {
+    if (!count || !inView) return
+    if (reduced) {
+      setN(value)
+      return
+    }
+    const start = performance.now()
+    let frame = 0
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / 1400, 1)
+      setN(Math.round(value * (1 - Math.pow(1 - p, 3))))
+      if (p < 1) frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [count, inView, reduced, value])
+
+  return (
+    <span ref={ref}>
+      <span aria-hidden="true">
+        {n}
+        {suffix}
+      </span>
+      {/* Crawlers and screen readers get the final figure */}
+      <span className="sr-only">
+        {value}
+        {suffix}
+      </span>
+    </span>
+  )
+}
+
+const sectorIcons = [HomeIcon, Building2, Hotel, Store]
+const whyIcons = [Gem, LayoutGrid, Ruler, Truck]
 
 export function Home() {
   const { t, locale, href } = useLanguage()
   const h = t.home
-  const [lead, second, ...rest] = featuredProjects
+  const x = t.homeX
+  const years = new Date().getFullYear() - company.founded
 
   return (
     <>
-      <Seo title={t.meta.homeTitle} description={t.meta.homeDescription} path="/" jsonLd={[organizationSchema(locale), websiteSchema()]} />
+      <Seo
+        title={t.meta.homeTitle}
+        description={t.meta.homeDescription}
+        path="/"
+        jsonLd={[organizationSchema(locale), websiteSchema(), faqSchema(x.faqs)]}
+      />
 
-      {/* A. Hero */}
-      <section className="relative isolate flex min-h-[100svh] items-end overflow-hidden bg-charcoal-950 text-ivory-50">
-        {media.heroVideo ? (
-          <video
-            className="absolute inset-0 -z-10 h-full w-full object-cover motion-reduce:hidden"
-            src={media.heroVideo}
-            autoPlay
-            muted
-            loop
-            playsInline
-            aria-hidden="true"
-          />
-        ) : null}
-        <Media slot={media.hero} fill priority drift className="-z-20" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-charcoal-950/90 via-charcoal-950/45 to-charcoal-950/30" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-charcoal-950/60 to-transparent rtl:bg-gradient-to-l" />
+      {/* Hero: photo background, copy left, quote form right */}
+      <section className="relative isolate overflow-hidden bg-charcoal-950 text-white">
+        <Media slot={media.hero} fill priority drift decorative className="-z-20" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-charcoal-950/95 via-charcoal-950/80 to-charcoal-950/50 rtl:bg-gradient-to-l" />
 
-        <div className="shell w-full pb-14 pt-40 lg:pb-20">
-          <p className="eyebrow mb-8 !text-bronze-300 page-enter">{h.heroEyebrow}</p>
-          <MaskedHeading as="h1" lines={h.heroTitle} delay={150} className="max-w-5xl font-serif text-display-3xl font-light" />
-          <Reveal delay={500}>
-            <p className="mt-10 max-w-xl text-lead text-ivory-50/85">{h.heroText}</p>
-          </Reveal>
-          <Reveal delay={650} className="mt-10 flex flex-wrap gap-4">
-            <Button to={href('/our-projects/')} variant="light" track="hero_projects">
-              {h.heroPrimary}
-            </Button>
-            <Button to={href('/contact/') + '#inquiry'} variant="ghost-light" track="hero_inquiry">
-              {h.heroSecondary}
-            </Button>
-          </Reveal>
-
-          <div className="mt-16 flex items-center justify-between border-t border-ivory-50/20 pt-6 text-caption uppercase tracking-[0.18em] text-ivory-50/70 lg:mt-24">
-            <span>{t.common.est}</span>
-            <span className="hidden items-center gap-3 sm:flex" aria-hidden="true">
-              {h.scroll}
-              <span className="relative block h-8 w-px overflow-hidden bg-ivory-50/25">
-                <span className="absolute inset-x-0 top-0 h-1/2 bg-ivory-50 motion-safe:animate-[scroll-cue_2.4s_ease-in-out_infinite]" />
+        <div className="shell grid items-center gap-12 pb-28 pt-14 lg:grid-cols-12 lg:pb-36 lg:pt-20">
+          <div className="lg:col-span-7">
+            <p className="page-enter flex flex-wrap items-center gap-3 text-body-sm font-semibold text-white/90">
+              <span className="rounded-full bg-bronze-500 px-3 py-1 text-[0.75rem] font-extrabold uppercase tracking-[0.06em] text-charcoal-950">
+                {x.heroBadge}
               </span>
-            </span>
-          </div>
-        </div>
-      </section>
+              {x.heroLabel}
+            </p>
+            <h1 className="page-enter mt-6 font-heading text-display-3xl font-extrabold">
+              {h.heroTitle[0]} <span className="text-bronze-400">{x.heroHighlight}</span>
+            </h1>
+            <p className="mt-6 text-lead font-semibold text-white">{x.heroSub}</p>
+            <p className="mt-3 max-w-2xl text-white/75">{h.heroText}</p>
 
-      {/* C. Introduction */}
-      <section className="py-section">
-        <div className="shell">
-          <p className="eyebrow mb-8">{h.introEyebrow}</p>
-          <MaskedHeading lines={[h.introTitle]} className="max-w-6xl font-serif text-display-2xl font-light" />
-
-          <div className="mt-20 grid gap-14 lg:mt-28 lg:grid-cols-12 lg:gap-10">
-            <div className="relative lg:col-span-6">
-              <Reveal mode="mask">
-                <Media slot={media.intro} ratio="aspect-[4/5]" parallax sizes="(min-width: 1024px) 50vw, 100vw" />
-              </Reveal>
-              <Reveal mode="mask" delay={250} className="absolute -bottom-12 end-0 hidden w-[42%] border-[10px] border-ivory-100 sm:block lg:-end-16">
-                <Media slot={media.introDetail} ratio="aspect-square" />
-              </Reveal>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Button to={href('/contact/') + '#inquiry'} track="hero_quote">
+                {t.nav.cta}
+              </Button>
+              <Button to={whatsappLink()} variant="whatsapp" icon="whatsapp" track="hero_whatsapp">
+                {x.whatsappCta}
+              </Button>
             </div>
 
-            <div className="lg:col-span-5 lg:col-start-8 lg:pt-24">
-              {h.introText.map((p, i) => (
-                <Reveal key={i} delay={i * 120}>
-                  <p className={i === 0 ? 'text-lead text-charcoal-900' : 'mt-6 text-stone-700'}>{p}</p>
-                </Reveal>
+            <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-3 text-body-sm text-white/85">
+              {x.heroChecks.map((c) => (
+                <li key={c} className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-bronze-400" aria-hidden="true" />
+                  {c}
+                </li>
               ))}
-              <Reveal delay={300}>
-                <dl className="mt-14 grid grid-cols-1 gap-8 border-t border-charcoal-900/15 pt-10 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-                  {h.introFacts.map((f) => (
-                    <div key={f.label}>
-                      <dt className="sr-only">{f.label}</dt>
-                      <dd>
-                        <span className="block font-serif text-display-md text-charcoal-900">{f.value}</span>
-                        <span className="mt-2 block text-caption text-stone-600">{f.label}</span>
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </Reveal>
-              <Reveal delay={400} className="mt-12">
-                <ArrowLink to={href('/about/')}>{h.aboutCta}</ArrowLink>
-              </Reveal>
+            </ul>
+          </div>
+
+          <div className="lg:col-span-5 lg:ps-6">
+            <QuickQuote />
+          </div>
+        </div>
+      </section>
+
+      {/* Stats card overlapping the hero */}
+      <section aria-label={x.heroLabel} className="relative z-10 -mt-16">
+        <div className="shell">
+          <dl className="grid grid-cols-2 overflow-hidden rounded-card bg-white shadow-lift lg:grid-cols-4">
+            {x.stats.map((s, i) => (
+              <div
+                key={s.label}
+                className={cn(
+                  'flex flex-col-reverse p-6 text-center sm:p-8',
+                  i % 2 === 1 && 'border-s border-charcoal-900/10',
+                  i === 2 && 'lg:border-s',
+                  i > 1 && 'border-t border-charcoal-900/10 lg:border-t-0',
+                )}
+              >
+                <dt className="mt-3 text-body-sm text-stone-600">{s.label}</dt>
+                <dd className="font-heading text-[2.5rem] font-extrabold leading-none text-charcoal-900">
+                  <Counter value={s.value} suffix={s.suffix} count={s.count} />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* Brand strip */}
+      <section className="py-20" aria-labelledby="partners-title">
+        <div className="shell">
+          <SectionHead id="partners-title" eyebrow={x.partnersEyebrow} title={x.partnersTitle} text={x.partnersText} align="center" />
+        </div>
+        <div className="relative mt-12 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_8%,#000_92%,transparent)]" dir="ltr">
+          <ul className="flex w-max gap-4 motion-safe:animate-[marquee_45s_linear_infinite] hover:[animation-play-state:paused]">
+            {[...brands, ...brands].map((b, i) => (
+              <li key={`${b.slug}-${i}`} aria-hidden={i >= brands.length ? true : undefined}>
+                <Link
+                  to={href(`/brands/${b.slug}/`)}
+                  tabIndex={i >= brands.length ? -1 : undefined}
+                  className="flex h-20 w-48 items-center justify-center rounded-card border border-charcoal-900/10 bg-white px-5 text-center font-heading text-[1rem] font-bold uppercase tracking-[0.06em] text-stone-600 transition-colors hover:border-bronze-500 hover:text-charcoal-900"
+                >
+                  {b.logo ? <img src={b.logo} alt={b.name} className="max-h-10 w-auto grayscale" /> : b.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <p className="mt-8 text-center">
+          <Link to={href('/our-brands/')} className="inline-flex items-center gap-2 text-body-sm font-semibold text-bronze-600 hover:text-charcoal-900">
+            {h.brandsCta} <Arrow />
+          </Link>
+        </p>
+      </section>
+
+      {/* About */}
+      <section className="pb-section" aria-labelledby="about-title">
+        <div className="shell grid items-center gap-14 lg:grid-cols-2 lg:gap-16">
+          <Reveal className="relative pb-10 pe-10">
+            <Media slot={media.about} ratio="aspect-[5/4]" className="rounded-card" sizes="(min-width: 1024px) 50vw, 100vw" />
+            <Media
+              slot={media.introDetail}
+              ratio="aspect-square"
+              className="absolute bottom-0 end-0 hidden w-[38%] rounded-card border-[6px] border-white shadow-lift sm:block"
+            />
+            <div className="absolute bottom-0 start-6 rounded-card bg-bronze-500 p-6 text-charcoal-950 shadow-lift">
+              <p className="font-heading text-[2.75rem] font-extrabold leading-none">{years}+</p>
+              <p className="mt-2 max-w-[9rem] text-caption font-semibold">{x.aboutBadge}</p>
+            </div>
+          </Reveal>
+
+          <div>
+            <SectionHead id="about-title" eyebrow={x.aboutEyebrow} title={x.aboutTitle} />
+            {h.introText.map((p, i) => (
+              <p key={i} className="mt-5 text-stone-600">
+                {p}
+              </p>
+            ))}
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+              {x.aboutChecks.map((c) => (
+                <li key={c} className="flex items-center gap-2.5 text-body-sm font-semibold text-charcoal-900">
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-bronze-500" aria-hidden="true" />
+                  {c}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Button to={href('/about/')} variant="dark">
+                {h.aboutCta}
+              </Button>
+              <Button to={company.profilePdf} variant="outline" icon="none" external>
+                {t.common.downloadProfile}
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* D. Services */}
+      {/* Services */}
       <section className="bg-ivory-200 py-section" aria-labelledby="services-title">
         <div className="shell">
-          <div className="mb-20 grid gap-8 lg:mb-28 lg:grid-cols-12 lg:items-end">
-            <div className="lg:col-span-7">
-              <p className="eyebrow mb-6">{h.servicesEyebrow}</p>
-              <h2 id="services-title" className="font-serif text-display-xl font-light">
-                {h.servicesTitle}
-              </h2>
+          <SectionHead id="services-title" eyebrow={x.servicesEyebrow} title={x.servicesTitle} text={x.servicesText} />
+          <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {coreServices.map((s, i) => (
+              <Reveal as="li" key={s.slug} delay={(i % 3) * 80}>
+                <ServiceCard service={s} />
+              </Reveal>
+            ))}
+          </ul>
+
+          <div className="mt-6 flex flex-col items-start justify-between gap-6 rounded-card bg-charcoal-900 p-8 text-white sm:p-10 lg:flex-row lg:items-center">
+            <div className="on-dark">
+              <p className="eyebrow mb-3">{x.bundleEyebrow}</p>
+              <h3 className="font-heading text-display-md font-extrabold">{x.bundleTitle}</h3>
+              <p className="mt-2 text-white/75">{x.bundleText}</p>
             </div>
-            <div className="lg:col-span-4 lg:col-start-9">
-              <p className="text-stone-700">{h.servicesText}</p>
-              <ArrowLink to={href('/services/')} className="mt-6">
-                {t.nav.allServices}
-              </ArrowLink>
+            <div className="flex shrink-0 flex-wrap gap-3">
+              <Button to={href('/turnkey-project-solutions/')} track="bundle_turnkey">
+                {x.bundleCta}
+              </Button>
+              <Button to={href('/services/')} variant="outline-light">
+                {x.seeMore}
+              </Button>
             </div>
           </div>
-          <ServicePanels items={coreServices} />
         </div>
       </section>
 
-      {/* E. Featured projects */}
-      <section className="py-section" aria-labelledby="projects-title">
+      {/* Sectors (dark) */}
+      <section className="bg-charcoal-900 py-section text-white" aria-labelledby="sectors-title">
         <div className="shell">
-          <div className="mb-16 flex flex-wrap items-end justify-between gap-8 lg:mb-24">
-            <div>
-              <p className="eyebrow mb-6">{h.projectsEyebrow}</p>
-              <h2 id="projects-title" className="max-w-3xl font-serif text-display-xl font-light">
-                {h.projectsTitle}
-              </h2>
-            </div>
-            <ArrowLink to={href('/our-projects/')}>{t.common.allProjects}</ArrowLink>
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-end">
+            <SectionHead id="sectors-title" eyebrow={x.sectorsEyebrow} title={x.sectorsTitle} dark />
+            <p className="text-white/75 lg:pb-2">{x.sectorsText}</p>
           </div>
-
-          <div className="grid gap-16 lg:grid-cols-12 lg:gap-10">
-            <Reveal className="lg:col-span-7">
-              <ProjectCard project={lead} ratio="aspect-[4/3]" size="lg" />
+          <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+            {x.sectors.map((s, i) => {
+              const Icon = sectorIcons[i]
+              return (
+                <Reveal as="li" key={s.title} delay={i * 70}>
+                  <Link
+                    to={href(s.path)}
+                    className="group flex h-full flex-col rounded-card border border-white/10 bg-white/[0.04] p-6 transition-colors hover:border-bronze-400/60 hover:bg-white/[0.07]"
+                  >
+                    <Icon className="h-8 w-8 text-bronze-400" aria-hidden="true" />
+                    <h3 className="mt-5 font-heading text-[1.125rem] font-bold">{s.title}</h3>
+                    <p className="mt-2 flex-1 text-body-sm text-white/70">{s.text}</p>
+                    <Arrow className="mt-5 text-bronze-400 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+                  </Link>
+                </Reveal>
+              )
+            })}
+            <Reveal as="li" delay={4 * 70}>
+              <div className="flex h-full flex-col rounded-card bg-bronze-500 p-6 text-charcoal-950">
+                <h3 className="font-heading text-[1.125rem] font-extrabold">{x.sectorOtherTitle}</h3>
+                <p className="mt-2 flex-1 text-body-sm">{x.sectorOtherText}</p>
+                <Link to={href('/contact/')} className="btn btn-dark mt-5 min-h-[2.75rem] self-start">
+                  {x.sectorOtherCta} <Arrow />
+                </Link>
+              </div>
             </Reveal>
-            <Reveal delay={150} className="lg:col-span-4 lg:col-start-9 lg:mt-40">
-              <ProjectCard project={second} ratio="aspect-[4/5]" />
-            </Reveal>
-          </div>
+          </ul>
         </div>
+      </section>
 
-        {/* Horizontal rail for the rest */}
-        <div className="mt-20 lg:mt-28">
-          <ul className="no-scrollbar flex snap-x snap-mandatory gap-6 overflow-x-auto px-gutter pb-4 lg:gap-10" aria-label={h.projectsTitle}>
-            {rest.map((p) => (
-              <li key={p.slug} className="w-[78vw] shrink-0 snap-start sm:w-[44vw] lg:w-[29vw]">
-                <ProjectCard project={p} ratio="aspect-[3/4]" />
-              </li>
+      {/* Process */}
+      <section className="py-section" aria-labelledby="process-title">
+        <div className="shell">
+          <SectionHead id="process-title" eyebrow={x.processEyebrow} title={x.processTitle} text={x.processText} align="center" />
+          <ol className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {t.process.map((step, i) => (
+              <Reveal as="li" key={step.title} delay={i * 90} className="card relative p-7">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-charcoal-900 font-heading text-[1.0625rem] font-extrabold text-bronze-400">
+                  0{i + 1}
+                </span>
+                <h3 className="mt-6 font-heading text-[1.1875rem] font-bold">{step.title}</h3>
+                <p className="mt-3 text-body-sm text-stone-600">{step.text}</p>
+              </Reveal>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* Projects */}
+      <section className="bg-ivory-200 py-section" aria-labelledby="projects-title">
+        <div className="shell">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <SectionHead id="projects-title" eyebrow={x.projectsEyebrow} title={x.projectsTitle} />
+            <Button to={href('/our-projects/')} variant="dark">
+              {x.projectsCta}
+            </Button>
+          </div>
+          <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredProjects.map((p, i) => (
+              <Reveal as="li" key={p.slug} delay={(i % 3) * 80}>
+                <ProjectTile project={p} />
+              </Reveal>
             ))}
           </ul>
         </div>
       </section>
 
-      {/* F. Brands */}
-      <section className="border-t border-charcoal-900/10 py-section" aria-labelledby="brands-title">
-        <div className="shell grid gap-14 lg:grid-cols-12 lg:gap-10">
-          <div className="lg:col-span-4">
-            <div className="lg:sticky lg:top-32">
-              <p className="eyebrow mb-6">{h.brandsEyebrow}</p>
-              <h2 id="brands-title" className="font-serif text-display-xl font-light">
-                {h.brandsTitle}
-              </h2>
-              <p className="mt-8 text-stone-700">{h.brandsText}</p>
-              <ArrowLink to={href('/our-brands/')} className="mt-10">
-                {h.brandsCta}
-              </ArrowLink>
-            </div>
-          </div>
-          <Reveal className="lg:col-span-8">
-            <BrandGrid brands={brands.slice(0, 12)} compact />
-          </Reveal>
-        </div>
-      </section>
-
-      {/* G. Why Projects World */}
-      <section className="bg-ivory-200" aria-labelledby="why-title">
-        <div className="grid lg:grid-cols-2">
-          <div className="relative min-h-[60vh] lg:min-h-full">
-            <Media slot={media.why} fill parallax />
-          </div>
-          <div className="px-gutter py-section lg:px-20 xl:px-28">
-            <p className="eyebrow mb-6">{h.whyEyebrow}</p>
-            <h2 id="why-title" className="max-w-xl font-serif text-display-xl font-light">
-              {h.whyTitle}
-            </h2>
-            <ol className="mt-16 space-y-0">
-              {h.why.map((w, i) => (
-                <Reveal as="li" key={w.title} delay={i * 100} className="grid grid-cols-[3rem_1fr] gap-4 border-t border-charcoal-900/15 py-8 last:border-b">
-                  <span className="pt-1 font-serif text-[1.375rem] text-bronze-600">0{i + 1}</span>
-                  <div>
-                    <h3 className="font-serif text-[1.5rem] leading-snug">{w.title}</h3>
-                    <p className="mt-3 text-body-sm text-stone-700">{w.text}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </ol>
-          </div>
-        </div>
-      </section>
-
-      {/* H. Process */}
-      <section className="bg-charcoal-900 py-section text-ivory-50" aria-labelledby="process-title">
+      {/* Why choose (dark) */}
+      <section className="bg-charcoal-950 py-section text-white" aria-labelledby="why-title">
         <div className="shell">
-          <div className="mb-20 flex flex-wrap items-end justify-between gap-8 lg:mb-24">
-            <div>
-              <p className="eyebrow mb-6 !text-bronze-300">{h.processEyebrow}</p>
-              <h2 id="process-title" className="max-w-2xl font-serif text-display-xl font-light">
-                {h.processTitle}
-              </h2>
-            </div>
-            <Link to={href('/our-process/')} className="group inline-flex items-center gap-3 text-caption font-semibold uppercase tracking-[0.16em] text-ivory-50">
-              <span className="link-underline pb-1">{t.common.readMore}</span>
-            </Link>
-          </div>
-          <ProcessTimeline tone="dark" />
+          <SectionHead id="why-title" eyebrow={x.whyEyebrow} title={x.whyTitle} dark />
+          <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {h.why.map((w, i) => {
+              const Icon = whyIcons[i]
+              return (
+                <Reveal as="li" key={w.title} delay={i * 80} className="rounded-card border border-white/10 bg-white/[0.04] p-7">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-bronze-500 text-charcoal-950">
+                    <Icon className="h-6 w-6" aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-6 font-heading text-[1.1875rem] font-bold">{w.title}</h3>
+                  <p className="mt-3 text-body-sm text-white/70">{w.text}</p>
+                </Reveal>
+              )
+            })}
+          </ul>
         </div>
       </section>
 
-      {/* I. About */}
-      <section className="py-section" aria-labelledby="about-title">
-        <div className="shell grid gap-14 lg:grid-cols-12 lg:gap-10">
-          <div className="order-2 lg:order-1 lg:col-span-5">
-            <p className="eyebrow mb-6">{h.aboutEyebrow}</p>
-            <h2 id="about-title" className="font-serif text-display-xl font-light">
-              {h.aboutTitle}
-            </h2>
-            {h.aboutText.map((p, i) => (
-              <Reveal key={i} delay={i * 100}>
-                <p className="mt-8 text-stone-700">{p}</p>
-              </Reveal>
+      {/* FAQ */}
+      <section className="py-section" aria-labelledby="faq-title">
+        <div className="shell grid gap-12 lg:grid-cols-12">
+          <div className="lg:col-span-5">
+            <SectionHead id="faq-title" eyebrow={x.faqEyebrow} title={x.faqTitle} text={x.faqText} />
+            <a href={`tel:${company.phones[0].tel}`} className="btn btn-dark mt-8" onClick={() => track('click_to_call', { location: 'home_faq' })}>
+              <Phone className="h-4 w-4" aria-hidden="true" />
+              {x.faqCall} <span dir="ltr">{company.phones[0].display}</span>
+            </a>
+          </div>
+          <div className="space-y-3 lg:col-span-7">
+            {x.faqs.map((f, i) => (
+              <details key={f.q} open={i === 0} className="card group overflow-hidden open:border-bronze-500/50">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 px-6 py-5 [&::-webkit-details-marker]:hidden">
+                  <h3 className="font-heading text-[1.0625rem] font-bold">{f.q}</h3>
+                  <span
+                    aria-hidden="true"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ivory-200 text-[1.25rem] leading-none text-charcoal-900 group-open:bg-bronze-500"
+                  >
+                    <span className="group-open:hidden">+</span>
+                    <span className="hidden group-open:inline">−</span>
+                  </span>
+                </summary>
+                <p className="px-6 pb-6 text-body-sm text-stone-600">{f.a}</p>
+              </details>
             ))}
-            <ul className="mt-12 space-y-4 border-t border-charcoal-900/15 pt-8">
-              <li>
-                <ArrowLink to={href('/about/')}>{h.aboutCta}</ArrowLink>
-              </li>
-              <li>
-                <ArrowLink to={href('/about/') + '#mission'}>
-                  {t.about.missionTitle} · {t.about.visionTitle}
-                </ArrowLink>
-              </li>
-              <li>
-                <a
-                  href={company.profilePdf}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="link-underline inline-block pb-1 text-caption font-semibold uppercase tracking-[0.16em]"
-                >
-                  {t.common.downloadProfile}
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div className="order-1 grid grid-cols-5 gap-6 lg:order-2 lg:col-span-6 lg:col-start-7">
-            <Reveal mode="mask" className="col-span-3">
-              <Media slot={media.about} ratio="aspect-[3/4]" />
-            </Reveal>
-            <Reveal mode="mask" delay={200} className="col-span-2 mt-24">
-              <Media slot={media.aboutTeam} ratio="aspect-[3/5]" />
-            </Reveal>
           </div>
         </div>
       </section>
 
-      {/* J. Contact */}
-      <CtaBand withDetails />
+      <CtaBand />
     </>
   )
 }
