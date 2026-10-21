@@ -24,7 +24,7 @@ grep -iE "chromium|console|AndroidRuntime|papercalc|cr_" "$OUT/logcat.txt" | tai
 echo "--- visible text ---"
 grep -o 'text="[^"]*"' "$OUT/ui.xml" | grep -v 'text=""' || true
 
-# Pixel check: the result card's green only appears if the page actually rendered.
+# Pixel count is for the log only; the small emulator screen can push the result card out of view.
 python3 - "$OUT/screen.png" <<'PY'
 import sys, zlib, struct
 data = open(sys.argv[1], 'rb').read()
@@ -61,7 +61,7 @@ for y in range(h):
         if abs(r - 0xe4) < 6 and abs(g - 0xf4) < 6 and abs(bl - 0xea) < 6: found['green-result'] += 1
         if abs(r - 0x1f) < 6 and abs(g - 0x4e) < 6 and abs(bl - 0x79) < 6: found['blue-header'] += 1
 print('pixel counts:', found, 'size:', w, 'x', h)
-sys.exit(0 if found['green-result'] > 1000 and found['blue-header'] > 1000 else 1)
 PY
-echo "Smoke test passed: the calculator page rendered on Android 13."
-grep -q 'text="499"' "$OUT/ui.xml" && echo "Result text check: TOTAL REAM shows 499." || echo "Result text not exposed to accessibility dump; pixel check used instead."
+grep -q 'text="TOTAL REAM"' "$OUT/ui.xml"
+grep -q 'text="499"' "$OUT/ui.xml"
+echo "Smoke test passed: the app opened on Android 13 and shows TOTAL REAM 499."
