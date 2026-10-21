@@ -1,5 +1,5 @@
 // Bump the version whenever any cached file changes so phones pick up the update.
-const CACHE = 'paper-calc-v1';
+const CACHE = 'paper-calc-v2';
 const FILES = [
   './',
   'index.html',
