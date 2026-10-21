@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paper Calculator</title>
+<meta name="description" content="Convert paper tonnage to reams and reams to tonnage from sheet size, GSM and sheets per ream.">
+<meta name="theme-color" content="#1f4e79">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Paper Calc">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+  :root {
+    --bg: #eef2f7;
+    --card: #ffffff;
+    --text: #17212b;
+    --muted: #5b6b7c;
+    --line: #d5dde6;
+    --brand: #1f4e79;
+    --brand-soft: #e3ecf6;
+    --result: #0f6b3a;
+    --result-soft: #e4f4ea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1620;
+      --card: #18222e;
+      --text: #e8eef5;
+      --muted: #9aabbd;
+      --line: #2b3a4b;
+      --brand: #6ea8e0;
+      --brand-soft: #1d3147;
+      --result: #5fd394;
+      --result-soft: #173426;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  header {
+    background: var(--brand);
+    color: #fff;
+    padding: 18px 16px 14px;
+  }
+  @media (prefers-color-scheme: dark) { header { color: #0f1620; } }
+  header h1 { margin: 0; font-size: 1.3rem; font-weight: 700; }
+  header p { margin: 2px 0 0; font-size: .85rem; opacity: .85; }
+  main { max-width: 520px; margin: 0 auto; padding: 14px 16px 32px; }
+
+  .tabs {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 4px; margin-bottom: 14px;
+  }
+  .tabs button {
+    border: 0; border-radius: 9px; padding: 11px 6px;
+    font: inherit; font-size: .9rem; font-weight: 600;
+    background: transparent; color: var(--muted); cursor: pointer;
+  }
+  .tabs button[aria-selected="true"] { background: var(--brand); color: var(--card); }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px;
+  }
+  .card h2 { margin: 0 0 12px; font-size: 1rem; color: var(--brand); letter-spacing: .02em; }
+  [hidden] { display: none !important; }
+
+  .field { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .field:last-of-type { border-bottom: 0; }
+  .field label { flex: 1; font-size: .95rem; }
+  .field input {
+    width: 44%; min-width: 120px; text-align: right;
+    font: inherit; font-size: 1.05rem; font-weight: 600;
+    color: var(--text); background: var(--brand-soft);
+    border: 1px solid transparent; border-radius: 9px; padding: 10px 12px;
+  }
+  .field input:focus { outline: none; border-color: var(--brand); }
+  .field input.invalid { border-color: #d64545; }
+
+  .results { margin-top: 14px; display: grid; gap: 8px; }
+  .row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 10px 12px; border-radius: 10px; background: var(--brand-soft);
+  }
+  .row span:first-child { font-size: .9rem; color: var(--muted); }
+  .row strong { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+  .row.total { background: var(--result-soft); padding: 14px 12px; }
+  .row.total span:first-child { color: var(--result); font-weight: 700; }
+  .row.total strong { color: var(--result); font-size: 1.6rem; }
+
+  .actions { margin-top: 12px; display: flex; justify-content: flex-end; }
+  .actions button {
+    font: inherit; font-size: .85rem; color: var(--brand);
+    background: none; border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px;
+  }
+  .note { margin-top: 14px; font-size: .8rem; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Paper Calculator</h1>
+  <p>Ton ↔ Ream converter</p>
+</header>
+
+<main>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-t2r" aria-controls="t2r" aria-selected="true">Ton → Ream</button>
+    <button role="tab" id="tab-r2t" aria-controls="r2t" aria-selected="false">Ream → Ton</button>
+  </div>
+
+  <section class="card" id="t2r" role="tabpanel" aria-labelledby="tab-t2r">
+    <h2>1. TON SE REAM NIKALEIN</h2>
+    <div class="field"><label for="t2r-length">Length (inches)</label><input id="t2r-length" data-key="length" type="number" inputmode="decimal" step="any" min="0"></div>
+    <div class="field"><label for="t2r-width">Width (inches)</label><input id="t2r-width" data-key="width" type="number" inputmode="decimal" step="any" min="0"></div>
+    <div class="field"><label for="t2r-gsm">GSM</label><input id="t2r-gsm" data-key="gsm" type="number" inputmode="decimal" step="any" min="0"></div>
+    <div class="field"><label for="t2r-sheets">Sheets per ream</label><input id="t2r-sheets" data-key="sheets" type="number" inputmode="numeric" step="any" min="0"></div>
+    <div class="field"><label for="t2r-qty">Ton</label><input id="t2r-qty" data-key="qty" type="number" inputmode="decimal" step="any" min="0"></div>
+    <div class="results">
+      <div class="row"><span>Weight per sheet</span><strong data-out="sheet">–</strong></div>
+      <div class="row"><span>1 ream weight</span><strong data-out="ream">–</strong></div>
+      <div class="row total"><span>TOTAL REAM</span><strong data-out="total">–</strong></div>
+    </div>
+    <div class="actions"><button type="button" data-reset>Reset</button></div>
+  </section>
+
+  <section class="card" id="r2t" role="tabpanel" aria-labelledby="tab-r2t" hidden>
+    <h2>2. REAM SE TON NIKALEIN</h2>
+    <div class="field"><label for="r2t-length">Length (inches)</label><input id="r2t-length" data-key="length" type="number" inputmode="decimal" step="any" min="0"></div>
+    <div class="field"><label for="r2t-width">Width (inches)</label><input id="r2t-width" data-key="width" type="number" inputmode="decimal" step="any" min="0"></div>
+    <div class="field"><label for="r2t-gsm">GSM</label><input id="r2t-gsm" data-key="gsm" type="number" inputmode="decimal" step="any" min="0"></div>
+    <div class="field"><label for="r2t-sheets">Sheets per ream</label><input id="r2t-sheets" data-key="sheets" type="number" inputmode="numeric" step="any" min="0"></div>
+    <div class="field"><label for="r2t-qty">Ream</label><input id="r2t-qty" data-key="qty" type="number" inputmode="decimal" step="any" min="0"></div>
+    <div class="results">
+      <div class="row"><span>Weight per sheet</span><strong data-out="sheet">–</strong></div>
+      <div class="row"><span>1 ream weight</span><strong data-out="ream">–</strong></div>
+      <div class="row total"><span>TOTAL TON</span><strong data-out="total">–</strong></div>
+    </div>
+    <div class="actions"><button type="button" data-reset>Reset</button></div>
+  </section>
+
+  <p class="note">Works offline once installed. Values are saved on this device.</p>
+</main>
+
+<script>
+  // Same formulas as Paper_Calculator_F1.xlsx, including its intermediate ROUNDs.
+  // Excel ROUND rounds half away from zero; the exponent trick avoids float drift (1.005 -> 1.01).
+  function round(x, d) {
+    const s = Math.sign(x);
+    return s * Number(Math.round(Number(Math.abs(x) + 'e' + d)) + 'e-' + d);
+  }
+
+  const DEFAULTS = {
+    t2r: { length: 23, width: 36, gsm: 75, sheets: 500, qty: 10 },
+    r2t: { length: 17, width: 27, gsm: 68, sheets: 500, qty: 993 }
+  };
+
+  const fmt = (n, d) => n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+  function calc(mode, v) {
+    const sheet = round((v.length * v.width / 1550) * v.gsm, 2); // grams
+    const ream = round((sheet / 1000) * v.sheets, 2);            // kg
+    let total;
+    if (mode === 't2r') total = ream > 0 ? round((v.qty * 1000) / ream, 0) : NaN; // reams
+    else total = round((v.qty * ream) / 1000, 2);                                  // tons
+    return { sheet, ream, total };
+  }
+
+  function load(mode) {
+    try {
+      const saved = JSON.parse(localStorage.getItem('paper-calc-' + mode));
+      if (saved) return Object.assign({}, DEFAULTS[mode], saved);
+    } catch (e) {}
+    return Object.assign({}, DEFAULTS[mode]);
+  }
+
+  function save(mode, values) {
+    try { localStorage.setItem('paper-calc-' + mode, JSON.stringify(values)); } catch (e) {}
+  }
+
+  function setup(mode) {
+    const panel = document.getElementById(mode);
+    const inputs = panel.querySelectorAll('input');
+    const out = k => panel.querySelector('[data-out="' + k + '"]');
+
+    function fill(values) {
+      inputs.forEach(i => { i.value = values[i.dataset.key]; });
+    }
+
+    function update() {
+      const v = {};
+      let ok = true;
+      inputs.forEach(i => {
+        const n = parseFloat(i.value);
+        const bad = i.value.trim() === '' || !isFinite(n) || n < 0;
+        i.classList.toggle('invalid', bad);
+        if (bad) ok = false;
+        v[i.dataset.key] = n;
+      });
+      if (!ok) {
+        ['sheet', 'ream', 'total'].forEach(k => { out(k).textContent = '–'; });
+        return;
+      }
+      save(mode, v);
+      const r = calc(mode, v);
+      out('sheet').textContent = fmt(r.sheet, 2) + ' g';
+      out('ream').textContent = fmt(r.ream, 2) + ' kg';
+      out('total').textContent = isFinite(r.total)
+        ? (mode === 't2r' ? fmt(r.total, 0) : fmt(r.total, 2))
+        : '–';
+    }
+
+    inputs.forEach(i => {
+      i.addEventListener('input', update);
+      i.addEventListener('focus', () => i.select());
+    });
+    panel.querySelector('[data-reset]').addEventListener('click', () => {
+      fill(DEFAULTS[mode]);
+      update();
+    });
+
+    fill(load(mode));
+    update();
+  }
+
+  setup('t2r');
+  setup('r2t');
+
+  const tabs = document.querySelectorAll('[role="tab"]');
+  tabs.forEach(tab => tab.addEventListener('click', () => {
+    tabs.forEach(t => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', on);
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+  }));
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
+</script>
+</body>
+</html>
