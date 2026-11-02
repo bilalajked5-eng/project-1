@@ -1,0 +1,38 @@
+{
+  "name": "QSC Automotive",
+  "legalNameAr": "كيو إس سي أوتوموتيف",
+  "domain": "https://qscco.sa",
+  "tagline": {
+    "en": "Precision Care for Exceptional Cars.",
+    "ar": "عناية دقيقة بسيارتك الاستثنائية."
+  },
+  "city": { "en": "Riyadh", "ar": "الرياض" },
+  "country": { "en": "Saudi Arabia", "ar": "المملكة العربية السعودية" },
+  "email": "info@qscco.sa",
+  "mainPhone": "+966599902555",
+  "mainPhoneDisplay": "+966 59 990 2555",
+  "mainPhoneNote": {
+    "en": "Main line (from the existing QSC website — branch assignment pending confirmation)",
+    "ar": "الرقم الرئيسي (من الموقع الحالي — بانتظار تأكيد توزيعه على الفروع)"
+  },
+  "secondaryPhoneLegacy": "+966508181801",
+  "secondaryPhoneNote": "LEGACY value from existing site; which branch owns it is NOT confirmed. Do not assign to a branch without client confirmation.",
+  "whatsapp": "PENDING_CLIENT",
+  "trustStats": [
+    { "value": "4,500", "valueAr": "4,500", "unit": { "en": "m² of facilities", "ar": "م² مساحة المنشآت" } },
+    { "value": "400", "valueAr": "400", "unit": { "en": "expert technicians", "ar": "فنيًا متخصصًا" } },
+    { "value": "10,250", "valueAr": "10,250", "unit": { "en": "satisfied clients", "ar": "عميلًا راضيًا" } },
+    { "value": "50", "valueAr": "50", "unit": { "en": "vehicles serviced daily", "ar": "مركبة تخدم يوميًا" } }
+  ],
+  "trustStatsNote": {
+    "en": "Company-wide figures as published by QSC.",
+    "ar": "أرقام على مستوى الشركة كما نشرتها QSC."
+  },
+  "hoursLegacy": {
+    "en": "Saturday–Thursday, 8:00 AM – 8:00 PM (existing site — reconfirm per branch)",
+    "ar": "السبت–الخميس، 8 صباحًا – 8 مساءً (من الموقع الحالي — يُعاد تأكيدها لكل فرع)"
+  },
+  "legacyAddress": "Riyadh — Al-Sulai — Al-Noor — Al-Buraikimah Street (legacy existing-site address; which new branch it belongs to is unconfirmed)",
+  "bookingEndpoint": "PENDING_CLIENT",
+  "analytics": { "ga4": "PENDING_CLIENT", "gtm": "PENDING_CLIENT", "searchConsole": "PENDING_CLIENT" }
+}

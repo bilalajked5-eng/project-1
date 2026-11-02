@@ -1,0 +1,8 @@
+legacy_url,proposed_301_target,notes
+https://qscco.sa/qsc6/index.html,https://qscco.sa/,Legacy homepage → language gateway (x-default). CONFIRM: full legacy URL inventory could not be crawled from the build environment — run a crawl (Screaming Frog or `wget --spider -r`) against the live site before cutover and extend this map.
+https://qscco.sa/qsc6/,https://qscco.sa/,Directory root → gateway
+https://qscco.sa/qsc6/*,https://qscco.sa/,CATCH-ALL LAST RULE ONLY after specific mappings below are filled from the real crawl; never ship a blind blanket redirect as the only rule
+https://qscco.sa/qsc6/<about-page>,https://qscco.sa/en/about/,PENDING crawl — map legacy about/company page when its real path is known
+https://qscco.sa/qsc6/<services-page>,https://qscco.sa/en/maintenance/,PENDING crawl — legacy services listing → closest pillar (split per service if legacy had per-service anchors/pages)
+https://qscco.sa/qsc6/<contact-page>,https://qscco.sa/en/contact/,PENDING crawl
+https://qscco.sa/qsc6/<arabic-home>,https://qscco.sa/ar/,PENDING crawl — if legacy Arabic version exists map it to /ar/ equivalents not /en/

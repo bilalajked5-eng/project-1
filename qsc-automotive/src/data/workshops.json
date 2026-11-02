@@ -1,0 +1,37 @@
+{
+  "maintenance": {
+    "id": "maintenance",
+    "slug": "maintenance",
+    "name": { "en": "QSC Maintenance Workshop", "ar": "ورشة QSC للصيانة" },
+    "shortName": { "en": "Maintenance", "ar": "الصيانة" },
+    "role": {
+      "en": "Mechanical, electrical, diagnostic and scheduled care for luxury and performance vehicles.",
+      "ar": "الصيانة الميكانيكية والكهربائية والفحص الحاسوبي والعناية الدورية للسيارات الفاخرة وعالية الأداء."
+    },
+    "address": { "en": "PENDING_CLIENT — exact street address to be confirmed", "ar": "PENDING_CLIENT — بانتظار تأكيد العنوان" },
+    "mapPin": null,
+    "mapQuery": null,
+    "phone": null,
+    "whatsapp": null,
+    "hours": null,
+    "ctaLabel": { "en": "Request a Diagnostic Appointment", "ar": "طلب موعد فحص وتشخيص" }
+  },
+  "painting": {
+    "id": "painting",
+    "slug": "painting-bodywork",
+    "name": { "en": "QSC Painting & Bodywork Workshop (Fast Painting)", "ar": "ورشة QSC للدهان والسمكرة (الدهان السريع)" },
+    "shortName": { "en": "Painting & Bodywork", "ar": "الدهان والسمكرة" },
+    "role": {
+      "en": "Professional painting, collision and body repair, paint matching and finishing — QSC's dedicated painting facility, operating as the Fast Painting workshop.",
+      "ar": "الدهان الاحترافي وإصلاح الهيكل والصدمات ومطابقة الألوان والتشطيب النهائي — منشأة QSC المتخصصة للدهان، وتعمل باسم ورشة الدهان السريع."
+    },
+    "address": { "en": "PENDING_CLIENT — exact street address to be confirmed", "ar": "PENDING_CLIENT — بانتظار تأكيد العنوان" },
+    "mapPin": null,
+    "mapQuery": null,
+    "phone": null,
+    "whatsapp": null,
+    "hours": null,
+    "ctaLabel": { "en": "Request a Paint Assessment", "ar": "طلب تقييم دهان" }
+  },
+  "_notes": "Two physical facilities total, per client decision. Fast Painting IS the painting facility — never a third address. phone/whatsapp/address/mapPin null = pending client confirmation; the UI must show an honest pending state and fall back to the organization main line, never invent branch details."
+}
