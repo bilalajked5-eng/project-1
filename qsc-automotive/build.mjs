@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /* =============================================================================
-   QSC AUTOMOTIVE — static site builder (no dependencies, Node 18+)
-   Generates real, independent HTML documents for every route in both languages.
+   QSC AUTOMOTIVE — static site builder V2 (no dependencies, Node 18+)
+   English site at the ROOT (/), Arabic under /ar/ — no language gateway.
+   Language switch lives in the header and maps to the equivalent page.
    Usage:  node build.mjs          → writes ./dist
    ============================================================================= */
 import fs from "node:fs";
@@ -9,7 +10,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import maintServices from "./src/content/services-maintenance.mjs";
 import paintServices from "./src/content/services-painting.mjs";
+import extraMaint from "./src/content/services-extra-maintenance.mjs";
+import extraPaint from "./src/content/services-extra-painting.mjs";
+import pageFaqs from "./src/content/page-faqs.mjs";
 import brands from "./src/content/brands.mjs";
+import brandsExtra from "./src/content/brands-extra.mjs";
 import UI from "./src/content/ui.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -18,28 +23,34 @@ const business = JSON.parse(fs.readFileSync(path.join(__dirname, "src/data/busin
 const workshops = JSON.parse(fs.readFileSync(path.join(__dirname, "src/data/workshops.json"), "utf8"));
 const SITE = business.domain;
 const LANGS = ["en", "ar"];
+const EXTRA = { ...extraMaint, ...extraPaint };
 const services = [...maintServices.map(s => ({ ...s, branch: "maintenance" })), ...paintServices.map(s => ({ ...s, branch: "painting" }))];
 
 /* ---------- helpers ---------- */
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const t = (obj, lang) => (obj && typeof obj === "object" && (lang in obj)) ? obj[lang] : obj;
+const base = (lang) => (lang === "en" ? "" : "/ar");
+const P = (lang, sub) => base(lang) + sub;             // sub always starts with "/"
 const pillarSlug = (branch) => branch === "painting" ? "painting-bodywork" : "maintenance";
-const serviceUrl = (lang, s) => `/${lang}/${pillarSlug(s.branch)}/${s.slug}/`;
+const serviceUrl = (lang, s) => P(lang, `/${pillarSlug(s.branch)}/${s.slug}/`);
 const findService = (slug) => services.find(s => s.slug === slug);
+const otherLang = (lang) => (lang === "en" ? "ar" : "en");
+const altOf = (lang, pathname) => lang === "en" ? "/ar" + pathname : pathname.replace(/^\/ar/, "") || "/";
+
 let written = [];
 function writePage(urlPath, html) {
-  const file = path.join(DIST, urlPath.replace(/^\//, ""), urlPath.endsWith(".html") ? "" : "index.html");
-  const target = urlPath.endsWith(".html") ? path.join(DIST, urlPath.replace(/^\//, "")) : file;
+  const target = urlPath.endsWith(".html")
+    ? path.join(DIST, urlPath.replace(/^\//, ""))
+    : path.join(DIST, urlPath.replace(/^\//, ""), "index.html");
   fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.writeFileSync(target, html);
   written.push(urlPath);
 }
-const otherLang = (lang) => (lang === "en" ? "ar" : "en");
-const altOf = (lang, pathname) => pathname.replace(`/${lang}/`, `/${otherLang(lang)}/`);
 
 /* ---------- layout ---------- */
 function head(lang, { title, desc, pathname, noindex = false, jsonld = [] }) {
-  const alt = altOf(lang, pathname);
+  const enPath = lang === "en" ? pathname : altOf(lang, pathname);
+  const arPath = lang === "ar" ? pathname : altOf(lang, pathname);
   const fonts = lang === "ar"
     ? "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"
     : "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap";
@@ -52,9 +63,9 @@ function head(lang, { title, desc, pathname, noindex = false, jsonld = [] }) {
 <meta name="description" content="${esc(desc)}">
 ${noindex ? '<meta name="robots" content="noindex,follow">' : ""}
 <link rel="canonical" href="${SITE}${pathname}">
-<link rel="alternate" hreflang="${lang === "en" ? "en" : "ar"}" href="${SITE}${pathname}">
-<link rel="alternate" hreflang="${lang === "en" ? "ar" : "en"}" href="${SITE}${alt}">
-<link rel="alternate" hreflang="x-default" href="${SITE}/">
+<link rel="alternate" hreflang="en" href="${SITE}${enPath}">
+<link rel="alternate" hreflang="ar" href="${SITE}${arPath}">
+<link rel="alternate" hreflang="x-default" href="${SITE}${enPath}">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:type" content="website">
@@ -73,25 +84,28 @@ ${jsonld.map(o => `<script type="application/ld+json">${JSON.stringify(o)}</scri
 function header(lang, current) {
   const N = UI.nav, C = UI.common;
   const items = [
-    [`/${lang}/`, N.home], [`/${lang}/maintenance/`, N.maintenance],
-    [`/${lang}/painting-bodywork/`, N.painting], [`/${lang}/car-brands/`, N.brands],
-    [`/${lang}/workshops/`, N.workshops], [`/${lang}/about/`, N.about], [`/${lang}/contact/`, N.contact]
+    [P(lang, "/"), N.home], [P(lang, "/maintenance/"), N.maintenance],
+    [P(lang, "/painting-bodywork/"), N.painting], [P(lang, "/car-brands/"), N.brands],
+    [P(lang, "/workshops/"), N.workshops], [P(lang, "/about/"), N.about], [P(lang, "/contact/"), N.contact]
   ];
   return `
 <a class="skip-link" href="#main">${t(C.skipLink, lang)}</a>
 <div class="topbar"><div class="container">
   <span>${lang === "ar" ? "ورشتان متخصصتان في الرياض — صيانة · دهان وسمكرة" : "Two specialist workshops in Riyadh — Maintenance · Painting & Bodywork"}</span>
-  <a href="tel:${business.mainPhone}" data-contact="phone" data-workshop="org" dir="ltr">${esc(business.mainPhoneDisplay)}</a>
+  <span class="tb-links">
+    <a href="tel:${workshops.maintenance.phone}" data-contact="phone" data-workshop="maintenance" dir="ltr">${esc(workshops.maintenance.phoneDisplay)}</a>
+    <a href="tel:${workshops.painting.phone}" data-contact="phone" data-workshop="painting" dir="ltr">${esc(workshops.painting.phoneDisplay)}</a>
+  </span>
 </div></div>
 <header class="site-header"><div class="container">
-  <a class="brand" href="/${lang}/" aria-label="QSC Automotive — ${lang === "ar" ? "الرئيسية" : "home"}">
+  <a class="brand" href="${P(lang, "/")}" aria-label="QSC Automotive — ${lang === "ar" ? "الرئيسية" : "home"}">
     <img src="/assets/logo/qsc-logo.jpg" alt="QSC Automotive" width="128" height="80">
   </a>
   <button class="nav-toggle" aria-expanded="false" aria-controls="nav-main" aria-label="${lang === "ar" ? "القائمة" : "Menu"}"><span></span></button>
   <nav class="nav-main" id="nav-main" aria-label="${lang === "ar" ? "التنقل الرئيسي" : "Primary"}">
     ${items.map(([href, label]) => `<a href="${href}"${current === href ? ' aria-current="page"' : ""}>${t(label, lang)}</a>`).join("\n    ")}
     <a class="lang-switch" href="${altOf(lang, current)}" lang="${otherLang(lang)}" aria-label="${t(C.langSwitchLabel, lang)}">${t(C.langSwitch, lang)}</a>
-    <a class="btn btn--primary nav-cta" href="/${lang}/book-appointment/">${t(UI.nav.book, lang)}</a>
+    <a class="btn btn--primary nav-cta" href="${P(lang, "/book-appointment/")}">${t(UI.nav.book, lang)}</a>
   </nav>
 </div></header>`;
 }
@@ -105,27 +119,27 @@ function footer(lang) {
     <div class="footer-brand">
       <img src="/assets/logo/qsc-logo.jpg" alt="QSC Automotive" width="128" height="80">
       <p>${t(C.footerAbout, lang)}</p>
-      <p dir="ltr"><a href="tel:${business.mainPhone}" data-contact="phone" data-workshop="org">${esc(business.mainPhoneDisplay)}</a></p>
+      <p dir="ltr"><a href="tel:${business.mainPhone}" data-contact="phone" data-workshop="maintenance">${esc(business.mainPhoneDisplay)}</a></p>
       <p><a href="mailto:${business.email}">${business.email}</a></p>
     </div>
     <div><h3>${t(C.footerExplore, lang)}</h3>
-      ${link(`/${lang}/maintenance/`, N.maintenance)}
-      ${link(`/${lang}/painting-bodywork/`, N.painting)}
-      ${link(`/${lang}/car-brands/`, N.brands)}
-      ${link(`/${lang}/workshops/`, N.workshops)}
-      ${link(`/${lang}/service-areas/`, N.serviceAreas)}
+      ${link(P(lang, "/maintenance/"), N.maintenance)}
+      ${link(P(lang, "/painting-bodywork/"), N.painting)}
+      ${link(P(lang, "/car-brands/"), N.brands)}
+      ${link(P(lang, "/workshops/"), N.workshops)}
+      ${link(P(lang, "/service-areas/"), N.serviceAreas)}
     </div>
     <div><h3>${t(C.footerSupport, lang)}</h3>
-      ${link(`/${lang}/book-appointment/`, N.book)}
-      ${link(`/${lang}/contact/`, N.contact)}
-      ${link(`/${lang}/workshops/maintenance/`, workshops.maintenance.shortName)}
-      ${link(`/${lang}/workshops/painting-bodywork/`, workshops.painting.shortName)}
+      ${link(P(lang, "/book-appointment/"), N.book)}
+      ${link(P(lang, "/contact/"), N.contact)}
+      ${link(P(lang, "/workshops/maintenance/"), workshops.maintenance.shortName)}
+      ${link(P(lang, "/workshops/painting-bodywork/"), workshops.painting.shortName)}
     </div>
     <div><h3>${t(C.footerLegal, lang)}</h3>
-      ${link(`/${lang}/about/`, N.about)}
-      ${link(`/${lang}/guides/`, N.guides)}
-      ${link(`/${lang}/projects/`, N.projects)}
-      ${link(`/${lang}/privacy-policy/`, N.privacy)}
+      ${link(P(lang, "/about/"), N.about)}
+      ${link(P(lang, "/guides/"), N.guides)}
+      ${link(P(lang, "/projects/"), N.projects)}
+      ${link(P(lang, "/privacy-policy/"), N.privacy)}
     </div>
   </div>
   <p class="stats-note">${t(C.independentNote, lang)}</p>
@@ -135,8 +149,8 @@ function footer(lang) {
   </div>
 </div></footer>
 <div class="sticky-cta" aria-hidden="false">
-  <a href="tel:${business.mainPhone}" data-contact="phone" data-workshop="org">${t(C.callUs, lang)} QSC</a>
-  <a class="primary" href="/${lang}/book-appointment/">${t(N.book, lang)}</a>
+  <a href="tel:${business.mainPhone}" data-contact="phone" data-workshop="maintenance">${t(C.callUs, lang)} QSC</a>
+  <a class="primary" href="${P(lang, "/book-appointment/")}">${t(N.book, lang)}</a>
 </div>
 <script src="/assets/js/site-config.js"></script>
 <script src="/assets/js/main.js" defer></script>`;
@@ -156,7 +170,6 @@ ${extraScripts}
 }
 
 function breadcrumbs(lang, trail) {
-  // trail: [[url|null, label], ...] last item current
   const items = trail.map(([href, label], i) =>
     href && i < trail.length - 1
       ? `<li><a href="${href}">${esc(label)}</a></li>`
@@ -175,10 +188,11 @@ function breadcrumbLd(trail) {
 
 const ph = (label, cls = "") => `<div class="ph ${cls}" role="img" aria-label="${esc(label)}"><span>${esc(label)}</span></div>`;
 
-function faqBlock(lang, faqs) {
+function faqBlock(lang, faqs, { cloud = false, title = null } = {}) {
   if (!faqs || !faqs.length) return "";
-  return `<section class="section section--tight"><div class="container">
-  <h2>${t(UI.common.faqTitle, lang)}</h2>
+  return `<section class="section section--tight${cloud ? " section--cloud" : ""}"><div class="container">
+  <span class="eyebrow">FAQ</span>
+  <h2>${title || t(UI.common.faqTitle, lang)}</h2>
   <div class="faq prose">${faqs.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("")}</div>
 </div></section>`;
 }
@@ -200,17 +214,16 @@ function serviceCard(lang, s) {
 function workshopSummaryCard(lang, wid) {
   const w = workshops[wid];
   const C = UI.common;
-  const url = `/${lang}/workshops/${w.slug}/`;
-  const pending = String(t(w.address, lang)).startsWith("PENDING");
+  const url = P(lang, `/workshops/${w.slug}/`);
   return `<article class="workshop-card">
   ${ph(lang === "ar" ? `الصورة قيد التجهيز — ${t(w.shortName, lang)}` : `PHOTO PENDING — QSC ${t(w.shortName, "en").toUpperCase()} WORKSHOP`)}
   <div class="workshop-body">
     <h3>${esc(t(w.name, lang))}</h3>
     <p>${esc(t(w.role, lang))}</p>
     <ul class="workshop-meta">
-      <li><span class="k">${lang === "ar" ? "العنوان" : "Address"}</span><span>${pending ? t(C.addressPending, lang) : esc(t(w.address, lang))}</span></li>
-      <li><span class="k">${lang === "ar" ? "الهاتف" : "Phone"}</span><span>${w.phone ? esc(w.phone) : `${t(C.phonePendingBranch, lang)} <a href="tel:${business.mainPhone}" dir="ltr" data-contact="phone" data-workshop="org">${esc(business.mainPhoneDisplay)}</a>`}</span></li>
-      <li><span class="k">${lang === "ar" ? "الدوام" : "Hours"}</span><span>${w.hours ? esc(w.hours) : t(C.hoursPending, lang)}</span></li>
+      <li><span class="k">${lang === "ar" ? "العنوان" : "Address"}</span><span>${esc(t(w.address, lang))}</span></li>
+      <li><span class="k">${lang === "ar" ? "الهاتف" : "Phone"}</span><span><a href="tel:${w.phone}" data-contact="phone" data-workshop="${wid}" dir="ltr">${esc(w.phoneDisplay)}</a></span></li>
+      <li><span class="k">${lang === "ar" ? "الدوام" : "Hours"}</span><span>${esc(t(w.hours, lang))}</span></li>
     </ul>
     <div class="actions">
       <a class="btn btn--dark btn--sm" href="${url}" data-track-workshop="${wid}">${t(C.viewWorkshop, lang)}</a>
@@ -225,8 +238,8 @@ function ctaGroup(lang, wid, { service = "", brand = "" } = {}) {
   const label = wid === "painting" ? t(C.paintCta, lang) : t(C.maintCta, lang);
   const q = new URLSearchParams({ workshop: wid, ...(service ? { service } : {}), ...(brand ? { brand } : {}) });
   return `<div class="actions">
-  <a class="btn btn--primary" href="/${lang}/book-appointment/?${q.toString()}">${label}</a>
-  <a class="btn btn--dark" data-contact="phone" data-workshop="${wid}" data-service="${esc(service)}" href="tel:${business.mainPhone}">${t(C.callUs, lang)} — ${t(workshops[wid].shortName, lang)}</a>
+  <a class="btn btn--primary" href="${P(lang, "/book-appointment/")}?${q.toString()}">${label}</a>
+  <a class="btn btn--dark" data-contact="phone" data-workshop="${wid}" data-service="${esc(service)}" href="tel:${workshops[wid].phone}">${t(C.callUs, lang)} — ${t(workshops[wid].shortName, lang)}</a>
   <a class="btn btn--ghost" data-contact="whatsapp" data-workshop="${wid}" data-service="${esc(service)}" data-brand="${esc(brand)}" href="#">${t(C.whatsapp, lang)}</a>
 </div>`;
 }
@@ -253,126 +266,150 @@ function processSection(lang, dark = false) {
 </div></section>`;
 }
 
+/* ---------- Inquiry form (hero + contact band variants) ---------- */
+function quickForm(lang, formId) {
+  const ar = lang === "ar";
+  const svcOptions = (branch) => services.filter(s => s.branch === branch)
+    .map(s => `<option value="${s.slug}">${esc(t(s.name, lang))}</option>`).join("");
+  return `<form class="hero-form qsc-form" data-form="${formId}" novalidate aria-label="${ar ? "طلب موعد سريع" : "Quick appointment request"}">
+  <h2>${ar ? "اطلب موعدك الآن" : "Request your appointment"}</h2>
+  <p class="sub">${ar ? "يرد عليك فريق الورشة المناسبة للتأكيد — الطلب ليس حجزًا مؤكدًا." : "The right workshop's team replies to confirm — a request, not a confirmed booking."}</p>
+  <div class="form-grid">
+    <div class="field"><label for="${formId}-name">${ar ? "الاسم" : "Name"} *</label>
+      <input id="${formId}-name" name="name" required maxlength="100" autocomplete="name"><span class="error-msg"></span></div>
+    <div class="field"><label for="${formId}-phone">${ar ? "رقم الجوال" : "Mobile"} *</label>
+      <input id="${formId}-phone" name="phone" required type="tel" inputmode="tel" dir="ltr" placeholder="+9665XXXXXXXX" autocomplete="tel"><span class="error-msg"></span></div>
+    <div class="field"><label for="${formId}-workshop">${ar ? "نوع العمل" : "Type of work"} *</label>
+      <select id="${formId}-workshop" name="workshop" required>
+        <option value="">${ar ? "اختر" : "Choose"}</option>
+        <option value="maintenance">${t(workshops.maintenance.shortName, lang)}</option>
+        <option value="painting">${t(workshops.painting.shortName, lang)}</option>
+      </select><span class="error-msg"></span></div>
+    <div class="field"><label for="${formId}-service">${ar ? "الخدمة" : "Service"}</label>
+      <select id="${formId}-service" name="service">
+        <option value="">${ar ? "اختر الخدمة (اختياري)" : "Select service (optional)"}</option>
+        <optgroup label="${t(workshops.maintenance.shortName, lang)}">${svcOptions("maintenance")}</optgroup>
+        <optgroup label="${t(workshops.painting.shortName, lang)}">${svcOptions("painting")}</optgroup>
+      </select></div>
+  </div>
+  <button type="submit" class="btn btn--primary">${ar ? "إرسال طلب الموعد" : "Send appointment request"}</button>
+  <div class="form-status" aria-live="polite"></div>
+  <div class="microtrust">
+    <span>✓ ${ar ? "رد خلال ساعات العمل" : "Reply within working hours"}</span>
+    <span>✓ ${ar ? "الفحص قبل أي التزام" : "Assessment before any commitment"}</span>
+  </div>
+</form>`;
+}
+
+function contactBand(lang, formId) {
+  const ar = lang === "ar";
+  return `<section class="section contact-band" id="contact-band"><div class="container split">
+  <div>
+    <span class="eyebrow">${ar ? "تواصل معنا" : "GET IN TOUCH"}</span>
+    <h2>${ar ? "سيارتك تستحق جوابًا اليوم" : "Your car deserves an answer today"}</h2>
+    <p class="lead">${ar
+      ? "أرسل الطلب وسيتواصل فريق الورشة المناسبة للتأكيد، أو اختر القناة الأسرع لك مباشرة."
+      : "Send the request and the right workshop's team contacts you to confirm — or pick the channel that suits you best."}</p>
+    <ul class="ways">
+      <li><strong>${ar ? "الصيانة" : "Maintenance"}</strong><a href="tel:${workshops.maintenance.phone}" data-contact="phone" data-workshop="maintenance" dir="ltr">${esc(workshops.maintenance.phoneDisplay)}</a></li>
+      <li><strong>${ar ? "الدهان" : "Painting"}</strong><a href="tel:${workshops.painting.phone}" data-contact="phone" data-workshop="painting" dir="ltr">${esc(workshops.painting.phoneDisplay)}</a></li>
+      <li><strong>${ar ? "واتساب" : "WhatsApp"}</strong><a data-contact="whatsapp" data-workshop="maintenance" href="#">${ar ? "ابدأ محادثة" : "Start a chat"}</a></li>
+      <li><strong>${ar ? "البريد" : "Email"}</strong><a href="mailto:${business.email}">${business.email}</a></li>
+    </ul>
+  </div>
+  ${quickForm(lang, formId)}
+</div></section>`;
+}
+
 /* =============================================================================
    PAGES
    ============================================================================= */
-
-/* ---------- Language gateway / ---------- */
-function gatewayPage() {
-  const jsonld = [{
-    "@context": "https://schema.org", "@type": "Organization",
-    name: "QSC Automotive", url: SITE, logo: SITE + "/assets/logo/qsc-logo.jpg",
-    telephone: business.mainPhone, email: business.email,
-    address: { "@type": "PostalAddress", addressLocality: "Riyadh", addressCountry: "SA" }
-  }];
-  return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>QSC Automotive — اختر اللغة | Choose Language</title>
-<meta name="description" content="QSC Automotive, Riyadh — specialist maintenance and painting & bodywork for luxury vehicles. اختر اللغة للمتابعة. Choose your language to continue.">
-<link rel="canonical" href="${SITE}/">
-<link rel="alternate" hreflang="en" href="${SITE}/en/">
-<link rel="alternate" hreflang="ar" href="${SITE}/ar/">
-<link rel="alternate" hreflang="x-default" href="${SITE}/">
-<meta property="og:title" content="QSC Automotive">
-<meta property="og:description" content="Precision care for exceptional cars — Riyadh.">
-<meta property="og:image" content="${SITE}/assets/logo/qsc-logo.jpg">
-<link rel="icon" href="/assets/logo/qsc-logo.jpg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600&family=Manrope:wght@400;600;700;800&display=swap">
-<link rel="stylesheet" href="/assets/css/main.css">
-${jsonld.map(o => `<script type="application/ld+json">${JSON.stringify(o)}</script>`).join("")}
-</head>
-<body>
-<main class="gateway">
-  <div class="gateway-inner">
-    <div class="gateway-logo"><img src="/assets/logo/qsc-logo.jpg" alt="QSC Automotive" width="256" height="160"></div>
-    <h1><span lang="ar" dir="rtl">عناية دقيقة بسيارتك الاستثنائية</span><br>Precision Care for Exceptional Cars</h1>
-    <p class="sub"><span lang="ar" dir="rtl">ورشتان متخصصتان في الرياض — الصيانة · الدهان والسمكرة</span><br>Two specialist workshops in Riyadh — Maintenance · Painting &amp; Bodywork</p>
-    <nav class="gateway-choices" aria-label="Language selection — اختيار اللغة">
-      <a class="gateway-choice" href="/ar/" lang="ar" dir="rtl"><strong>العربية</strong><span>تابع إلى الموقع العربي</span></a>
-      <a class="gateway-choice" href="/en/" lang="en"><strong>English</strong><span>Continue to the English site</span></a>
-    </nav>
-  </div>
-  <p class="gateway-foot">QSC Automotive · Riyadh, Saudi Arabia · <a href="tel:${business.mainPhone}" style="color:inherit" dir="ltr">${esc(business.mainPhoneDisplay)}</a></p>
-</main>
-</body>
-</html>`;
-}
 
 /* ---------- Homepage ---------- */
 function homePage(lang) {
   const ar = lang === "ar";
   const C = UI.common;
   const featured = ["engine-repair", "diagnostics", "suspension", "car-painting", "dent-repair", "paint-matching"].map(findService);
+  const pathname = P(lang, "/");
   const title = ar
     ? "QSC Automotive — صيانة ودهان السيارات الفاخرة في الرياض"
     : "QSC Automotive — Luxury Car Maintenance, Painting & Bodywork in Riyadh";
   const desc = ar
     ? "ورشتان متخصصتان في الرياض للسيارات الفاخرة وعالية الأداء: صيانة ميكانيكية وكهربائية متخصصة، ودهان وسمكرة احترافيان. احجز عبر الهاتف أو واتساب أو النموذج."
     : "Two specialist workshops in Riyadh for luxury and performance vehicles: dedicated mechanical & electrical maintenance, and professional painting & bodywork. Book by phone, WhatsApp or form.";
+  const homeFaqs = t(pageFaqs.home, lang);
   const jsonld = [{
-    "@context": "https://schema.org", "@type": "Organization",
-    name: "QSC Automotive", url: SITE + `/${lang}/`, logo: SITE + "/assets/logo/qsc-logo.jpg",
+    "@context": "https://schema.org", "@type": "AutomotiveBusiness",
+    name: "QSC Automotive", url: SITE + pathname, logo: SITE + "/assets/logo/qsc-logo.jpg",
     telephone: business.mainPhone, email: business.email,
     address: { "@type": "PostalAddress", addressLocality: "Riyadh", addressCountry: "SA" },
-    sameAs: []
-  }];
+    areaServed: { "@type": "City", name: "Riyadh" }
+  }, faqLd(homeFaqs)];
   const body = `
-<section class="hero"><div class="container">
-  <span class="eyebrow">QSC AUTOMOTIVE · ${ar ? "الرياض" : "RIYADH"}</span>
-  <h1>${ar ? "عناية دقيقة بسيارتك الاستثنائية." : "Precision Care for Exceptional Cars."}</h1>
-  <p>${ar
-    ? "صيانة متخصصة ودهان وسمكرة احترافيان للسيارات الفاخرة وعالية الأداء في الرياض — في ورشتين متخصصتين تحت هوية QSC واحدة."
-    : "Specialized maintenance and professional painting & bodywork for luxury and performance vehicles in Riyadh — across two dedicated workshops under one QSC standard."}</p>
-  <div class="actions">
-    <a class="btn btn--primary" href="/${lang}/book-appointment/">${t(UI.nav.book, lang)}</a>
-    <a class="btn btn--ghost-light" href="/${lang}/workshops/">${ar ? "استكشف الورشتين" : "Explore Our Workshops"}</a>
+<section class="hero hero--form"><div class="container">
+  <div>
+    <span class="eyebrow">QSC AUTOMOTIVE · ${ar ? "الرياض" : "RIYADH"}</span>
+    <h1>${ar ? "عناية دقيقة بسيارتك الاستثنائية." : "Precision Care for Exceptional Cars."}</h1>
+    <p>${ar
+      ? "صيانة متخصصة ودهان وسمكرة احترافيان للسيارات الفاخرة وعالية الأداء في الرياض — في ورشتين متخصصتين تحت معيار QSC واحد: الفحص قبل الإصلاح، والشرح قبل العمل، والتوثيق بعد الإنجاز."
+      : "Specialized maintenance and professional painting & bodywork for luxury and performance vehicles in Riyadh — two dedicated workshops under one QSC standard: assessment before repair, explanation before work, documentation after completion."}</p>
+    <div class="actions">
+      <a class="btn btn--ghost-light" href="${P(lang, "/maintenance/")}">${ar ? "خدمات الصيانة" : "Maintenance Services"}</a>
+      <a class="btn btn--ghost-light" href="${P(lang, "/painting-bodywork/")}">${ar ? "الدهان والسمكرة" : "Painting & Bodywork"}</a>
+    </div>
+    <div class="hero-badges">
+      ${business.trustStats.map(s => `<div class="hero-badge"><strong>${esc(ar ? s.valueAr : s.value)}</strong><span>${esc(t(s.unit, lang))}</span></div>`).join("")}
+    </div>
   </div>
+  ${quickForm(lang, "hero")}
 </div></section>
 
 <section class="section"><div class="container">
   <span class="eyebrow">${ar ? "تجربتان متخصصتان" : "TWO SPECIALIZED EXPERIENCES"}</span>
   <h2>${ar ? "اختر الورشة المناسبة لسيارتك" : "Choose the right workshop for your car"}</h2>
   <p class="lead">${ar
-    ? "لكل حاجة منشأتها المتخصصة وعنوانها المستقل: الصيانة الميكانيكية والفنية في ورشة الصيانة، والدهان والسمكرة في ورشة الدهان السريع."
-    : "Each need has its own dedicated facility at its own location: mechanical and technical care at the maintenance workshop, and paint & body at the Fast Painting facility."}</p>
+    ? "لكل حاجة منشأتها المتخصصة وعنوانها المستقل: الصيانة الميكانيكية والفنية في ورشة الصيانة، والدهان والسمكرة في ورشة الدهان السريع. هذا الفصل ليس تفصيلًا تنظيميًا — فالغبار عدو الدهان، والدهان لا مكان له قرب أعمال الميكانيكا، وكل فريق يتقن مجاله لأنه لا يعمل في سواه."
+    : "Each need has its own dedicated facility at its own location: mechanical and technical care at the maintenance workshop, and paint & body at the Fast Painting facility. That separation is not an organizational detail — dust is the enemy of paint, paint has no place near mechanical work, and each team masters its craft because it does nothing else."}</p>
   <div class="grid grid--2">
     <article class="choice">
       <div class="choice-media">${ph(ar ? "الصورة قيد التجهيز — ورشة الصيانة" : "PHOTO PENDING — QSC MAINTENANCE HERO")}</div>
       <div class="choice-body">
-        <span class="eyebrow">01 — ${ar ? "الصيانة" : "MAINTENANCE"}</span>
+        <span class="choice-num">01</span>
+        <span class="eyebrow">${ar ? "الصيانة" : "MAINTENANCE"}</span>
         <h3>${ar ? "الصيانة الميكانيكية والعناية الفنية" : "Maintenance & Technical Care"}</h3>
         <p class="lead" style="font-size:1rem">${ar
-          ? "المحركات وناقل الحركة والكهرباء والفحص الحاسوبي والتعليق والتكييف والصيانة الدورية — 15 خدمة متخصصة."
-          : "Engines, transmissions, electrical systems, diagnostics, suspension, AC and scheduled care — 15 specialist services."}</p>
-        <div class="actions"><a class="btn btn--dark" href="/${lang}/maintenance/" data-track-workshop="maintenance">${ar ? "استكشف الصيانة" : "Explore Maintenance"}</a></div>
+          ? "المحركات وناقل الحركة والكهرباء والفحص الحاسوبي والتعليق والتكييف والصيانة الدورية — 15 خدمة متخصصة بمنهج التشخيص أولًا."
+          : "Engines, transmissions, electrical systems, diagnostics, suspension, AC and scheduled care — 15 specialist services, diagnosis-first."}</p>
+        <div class="actions"><a class="btn btn--dark" href="${P(lang, "/maintenance/")}" data-track-workshop="maintenance">${ar ? "استكشف الصيانة" : "Explore Maintenance"}</a></div>
       </div>
     </article>
     <article class="choice">
       <div class="choice-media">${ph(ar ? "الصورة قيد التجهيز — ورشة الدهان" : "PHOTO PENDING — QSC PAINTING HERO")}</div>
       <div class="choice-body">
-        <span class="eyebrow">02 — ${ar ? "الدهان والسمكرة" : "PAINTING & BODYWORK"}</span>
+        <span class="choice-num">02</span>
+        <span class="eyebrow">${ar ? "الدهان والسمكرة" : "PAINTING & BODYWORK"}</span>
         <h3>${ar ? "الدهان والسمكرة / الدهان السريع" : "Painting & Bodywork / Fast Painting"}</h3>
         <p class="lead" style="font-size:1rem">${ar
-          ? "الدهان الاحترافي وإصلاح الصدمات والخدوش ومطابقة الألوان وقياس الشاصي — 11 خدمة في منشأة الدهان المستقلة."
-          : "Professional painting, dent and scratch repair, color matching and chassis work — 11 services at the dedicated painting facility."}</p>
-        <div class="actions"><a class="btn btn--dark" href="/${lang}/painting-bodywork/" data-track-workshop="painting">${ar ? "استكشف الدهان" : "Explore Painting"}</a></div>
+          ? "الدهان الاحترافي وإصلاح الصدمات والخدوش ومطابقة الألوان وقياس الشاصي — 11 خدمة في منشأة الدهان المستقلة، وتقييم مبدئي من الصور."
+          : "Professional painting, dent and scratch repair, color matching and chassis work — 11 services at the dedicated painting facility, with photo-first assessment."}</p>
+        <div class="actions"><a class="btn btn--dark" href="${P(lang, "/painting-bodywork/")}" data-track-workshop="painting">${ar ? "استكشف الدهان" : "Explore Painting"}</a></div>
       </div>
     </article>
   </div>
 </div></section>
 
 <section class="section section--cloud"><div class="container">
-  <span class="eyebrow">${ar ? "خدمات مختارة" : "CURATED SERVICES"}</span>
-  <h2>${ar ? "أكثر ما يطلبه عملاؤنا" : "What owners come to us for"}</h2>
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">${ar ? "خدمات مختارة" : "CURATED SERVICES"}</span>
+      <h2>${ar ? "أكثر ما يطلبه عملاؤنا" : "What owners come to us for"}</h2>
+    </div>
+    <a class="more" href="${P(lang, "/maintenance/")}">${ar ? "جميع الخدمات ←" : "All services →"}</a>
+  </div>
   <div class="grid grid--3">${featured.map(s => serviceCard(lang, s)).join("")}</div>
   <div class="actions">
-    <a class="btn btn--dark" href="/${lang}/maintenance/">${ar ? "جميع خدمات الصيانة (15)" : "All maintenance services (15)"}</a>
-    <a class="btn btn--ghost" href="/${lang}/painting-bodywork/">${ar ? "جميع خدمات الدهان (11)" : "All painting services (11)"}</a>
+    <a class="btn btn--dark" href="${P(lang, "/maintenance/")}">${ar ? "جميع خدمات الصيانة (15)" : "All maintenance services (15)"}</a>
+    <a class="btn btn--ghost" href="${P(lang, "/painting-bodywork/")}">${ar ? "جميع خدمات الدهان (11)" : "All painting services (11)"}</a>
   </div>
 </div></section>
 
@@ -381,7 +418,7 @@ function homePage(lang) {
   <h2>${ar ? "عناية متخصصة بعلامات السيارات الفاخرة" : "Specialist care across luxury marques"}</h2>
   <p class="lead">${t(C.independentNote, lang)}</p>
   <div class="brand-grid">
-    ${brands.map(b => `<a class="brand-chip" href="/${lang}/car-brands/${b.slug}/">${esc(t(b.name, lang))}</a>`).join("")}
+    ${brands.map(b => `<a class="brand-chip" href="${P(lang, `/car-brands/${b.slug}/`)}">${esc(t(b.name, lang))}</a>`).join("")}
   </div>
 </div></section>
 
@@ -397,17 +434,21 @@ ${processSection(lang)}
   </div>
 </div></section>
 
-<section class="section section--dark"><div class="container center">
-  <h2>${ar ? "جاهز لمناقشة حالة سيارتك؟" : "Ready to discuss your vehicle?"}</h2>
-  <p class="lead" style="margin-inline:auto">${ar
-    ? "اتصل بنا أو أرسل طلب موعد — يرد عليك فريق الورشة المناسبة."
-    : "Call us or send an appointment request — the right workshop's team gets back to you."}</p>
-  <div class="actions" style="justify-content:center">
-    <a class="btn btn--primary" href="/${lang}/book-appointment/">${t(UI.nav.book, lang)}</a>
-    <a class="btn btn--ghost-light" data-contact="phone" data-workshop="org" href="tel:${business.mainPhone}">${t(C.callUs, lang)} <span dir="ltr">${esc(business.mainPhoneDisplay)}</span></a>
-  </div>
-</div></section>`;
-  return page(lang, { title, desc, pathname: `/${lang}/`, navCurrent: `/${lang}/`, jsonld }, body, { pageType: "home" });
+<section class="section section--cloud"><div class="container prose">
+  <span class="eyebrow">${ar ? "لماذا الرياض تثق بـ QSC" : "WHY RIYADH TRUSTS QSC"}</span>
+  <h2>${ar ? "عناية بالسيارات الفاخرة مبنية على الوضوح" : "Luxury car care built on clarity"}</h2>
+  <p class="lead">${ar
+    ? "تملك سيارة فاخرة في الرياض يعني مواجهة سؤالين متكررين: من يفهم هذه السيارة فعلًا؟ ومن يقول لي الحقيقة عن حالتها؟ بُنيت QSC Automotive للإجابة عن الاثنين. في ورشة الصيانة يبدأ كل شيء بالتشخيص: قراءة أنظمة السيارة والتحقق الفعلي من كل نتيجة قبل أي توصية. وفي ورشة الدهان السريع يبدأ كل شيء بالتقييم: صور الضرر تنال قراءة محترفة وخيارات واقعية قبل أن تتحرك السيارة من مكانها."
+    : "Owning a luxury car in Riyadh means facing two recurring questions: who genuinely understands this car, and who will tell me the truth about its condition? QSC Automotive was built to answer both. At the maintenance workshop, everything starts with diagnosis — reading the car's systems and physically verifying every finding before any recommendation. At the Fast Painting workshop, everything starts with assessment — damage photos get a professional read and realistic options before the car moves anywhere."}</p>
+  <p>${ar
+    ? "النتيجة طريقة عمل يلمسها العميل في كل زيارة: نطاق مكتوب قبل العمل، وأسعار تتبع الفحص لا العكس، وتوثيق يحمي سجل سيارتك وقيمتها. ومع 16 علامة فاخرة مدعومة و26 خدمة متخصصة عبر المنشأتين، تجد سيارتك — من مرسيدس الاستخدام اليومي إلى فيراري نهاية الأسبوع — الفريق الذي يعرفها."
+    : "The result is a way of working owners feel on every visit: a written scope before work, prices that follow assessment rather than precede it, and documentation that protects your car's history and value. With 16 luxury marques supported and 26 specialist services across the two facilities, your car — from a daily-driven Mercedes to a weekend Ferrari — finds the team that knows it."}</p>
+</div></section>
+
+${faqBlock(lang, homeFaqs)}
+${contactBand(lang, "footer")}`;
+  return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld }, body,
+    { pageType: "home", extraScripts: `<script src="/assets/js/booking.js" defer></script>` });
 }
 
 /* ---------- Pillar pages ---------- */
@@ -415,6 +456,7 @@ function pillarPage(lang, branch) {
   const ar = lang === "ar";
   const isPaint = branch === "painting";
   const slug = pillarSlug(branch);
+  const pathname = P(lang, `/${slug}/`);
   const list = services.filter(s => s.branch === branch);
   const w = workshops[branch];
   const title = isPaint
@@ -423,7 +465,7 @@ function pillarPage(lang, branch) {
   const desc = isPaint
     ? (ar ? "منشأة QSC المتخصصة للدهان والسمكرة في الرياض: دهان احترافي وإصلاح الصدمات والخدوش ومطابقة الألوان وقياس الشاصي — 11 خدمة معتمدة وتقييم بالصور." : "QSC's dedicated painting & bodywork facility in Riyadh: professional painting, dent & scratch repair, paint matching and chassis work — 11 services with photo assessment.")
     : (ar ? "ورشة QSC للصيانة في الرياض: ميكانيكا وكهرباء وفحص حاسوبي وتعليق وتكييف وصيانة دورية للسيارات الفاخرة — 15 خدمة متخصصة بمسار حجز واضح." : "QSC's maintenance workshop in Riyadh: mechanical, electrical, diagnostics, suspension, AC and scheduled care for luxury vehicles — 15 specialist services with a clear booking path.");
-  const trail = [[`/${lang}/`, t(UI.common.breadcrumbHome, lang)], [null, t(isPaint ? UI.nav.painting : UI.nav.maintenance, lang)]];
+  const trail = [[P(lang, "/"), t(UI.common.breadcrumbHome, lang)], [null, t(isPaint ? UI.nav.painting : UI.nav.maintenance, lang)]];
   const cats = isPaint ? ["painting", "bodywork", "restoration"] : ["mechanical", "electrical", "chassis", "routine", "logistics"];
   const catSections = cats.map(cat => {
     const items = list.filter(s => s.category === cat);
@@ -431,6 +473,14 @@ function pillarPage(lang, branch) {
     return `<h3 style="margin-top:44px">${t(UI.categories[cat], lang)}</h3>
 <div class="grid grid--3" style="margin-top:18px">${items.map(s => serviceCard(lang, s)).join("")}</div>`;
   }).join("");
+  const pillarFaqs = t(isPaint ? pageFaqs.painting : pageFaqs.maintenance, lang);
+  const introCopy = isPaint
+    ? (ar
+      ? "يصل معظم عملاء الدهان وفي أذهانهم سؤال واحد: ما حجم هذا الضرر حقًا؟ بُنيت منشأة الدهان السريع للإجابة عنه بسرعة وأمانة. أرسل صور الضرر عبر واتساب أو النموذج فيرد فريق الدهان بقراءة مبدئية — تلميع أم إصلاح موضعي أم عمل على الجزء أم نطاق أشمل — ثم تُؤكَّد القراءة فعليًا عند وصول السيارة. وكل ما يلي ذلك، من تحضير السطح إلى مطابقة اللون إلى التشطيب النهائي، يجري في منشأة مكرسة للدهان وحده: غرف رش مضبوطة ومختبر ألوان ومعدات قياس شاصي بعيدًا عن غبار الأعمال الميكانيكية."
+      : "Most painting customers arrive with one question in mind: how bad is this damage, really? The Fast Painting facility was built to answer that question quickly and honestly. Send photos of the damage by WhatsApp or through the form and the painting team replies with an initial read — polish, localized repair, panel work or a fuller scope — then confirms it physically when the car arrives. Everything that follows, from surface preparation to color matching to final finishing, happens in a facility dedicated to paint alone: controlled spray booths, a color lab and chassis-measurement equipment, far from the dust of mechanical work.")
+    : (ar
+      ? "تتعامل ورشة الصيانة مع السيارة الفاخرة كمنظومة هندسية لا كقائمة قطع. كل زيارة تبدأ بالتشخيص — قراءة أنظمة السيارة، والتحقق الفعلي من كل نتيجة، وتجربة طريق تعيد إنتاج الشكوى — وتنتهي بتقرير مكتوب ونطاق عمل لا يُنفَّذ إلا بموافقتك. خمس عشرة خدمة متخصصة تغطي الميكانيكا والكهرباء والفحص الحاسوبي والتعليق والعناية الدورية، وكلها مضبوطة على ظروف الرياض: الحرارة التي تجهد التبريد والتكييف، والغبار الذي يبلي التعليق، والزحام الذي يشيخ ناقل الحركة."
+      : "The maintenance workshop treats a luxury car as an engineered system, not a parts list. Every visit begins with diagnosis — reading the car's systems, physically verifying each finding, and road-testing to reproduce the complaint — and ends with a written report and a scope of work that proceeds only on your approval. Fifteen specialist services cover mechanical, electrical, diagnostics, suspension and scheduled care, all tuned to Riyadh's conditions: the heat that strains cooling and AC, the dust that wears suspension, and the traffic that ages transmissions.");
   const body = `
 <section class="page-hero"><div class="container">
   <span class="eyebrow">${isPaint ? (ar ? "ورشة الدهان والسمكرة — الدهان السريع" : "PAINTING & BODYWORK — FAST PAINTING FACILITY") : (ar ? "ورشة الصيانة" : "MAINTENANCE WORKSHOP")}</span>
@@ -440,6 +490,9 @@ function pillarPage(lang, branch) {
     : (ar ? "التشخيص قبل الإصلاح، والشرح قبل العمل: هكذا تتعامل ورشة الصيانة مع كل سيارة، من الفحص الدوري إلى إصلاح المحركات." : "Diagnosis before repair, explanation before work: that is how the maintenance workshop treats every car, from scheduled service to engine repair.")}</p>
 </div></section>
 ${breadcrumbs(lang, trail)}
+<section class="section section--tight"><div class="container prose">
+  <p class="lead">${introCopy}</p>
+</div></section>
 <section class="section section--tight"><div class="container">
   <span class="eyebrow">${ar ? "دليل الخدمات" : "SERVICE DIRECTORY"}</span>
   <h2>${ar ? (isPaint ? "جميع خدمات الدهان والسمكرة" : "جميع خدمات الصيانة") : (isPaint ? "All painting & bodywork services" : "All maintenance services")}</h2>
@@ -453,7 +506,7 @@ ${breadcrumbs(lang, trail)}
       <p class="lead">${esc(t(w.role, lang))}</p>
       ${ph(ar ? `الصورة قيد التجهيز — ${t(w.shortName, lang)}` : `PHOTO PENDING — ${t(w.shortName, "en").toUpperCase()} FACILITY`, "")}
       <div class="actions">
-        <a class="btn btn--dark" href="/${lang}/workshops/${w.slug}/">${t(UI.common.viewWorkshop, lang)}</a>
+        <a class="btn btn--dark" href="${P(lang, `/workshops/${w.slug}/`)}">${t(UI.common.viewWorkshop, lang)}</a>
       </div>
     </div>
     <aside class="panel">
@@ -465,38 +518,43 @@ ${breadcrumbs(lang, trail)}
     </aside>
   </div>
 </div></section>
-${processSection(lang, true)}`;
+${processSection(lang, true)}
+${faqBlock(lang, pillarFaqs)}`;
   return page(lang, {
-    title, desc, pathname: `/${lang}/${slug}/`, navCurrent: `/${lang}/${slug}/`,
-    jsonld: [breadcrumbLd(trail.map(([h, l]) => [h, l]))]
+    title, desc, pathname, navCurrent: pathname,
+    jsonld: [breadcrumbLd(trail), faqLd(pillarFaqs)]
   }, body, { pageType: "pillar" });
 }
 
-/* ---------- Service pages ---------- */
+/* ---------- Service pages (expanded, ~1000 words each) ---------- */
 function servicePage(lang, s) {
   const ar = lang === "ar";
   const isPaint = s.branch === "painting";
   const w = workshops[s.branch];
   const pathname = serviceUrl(lang, s);
-  const pillarUrl = `/${lang}/${pillarSlug(s.branch)}/`;
+  const pillarUrl = P(lang, `/${pillarSlug(s.branch)}/`);
   const trail = [
-    [`/${lang}/`, t(UI.common.breadcrumbHome, lang)],
+    [P(lang, "/"), t(UI.common.breadcrumbHome, lang)],
     [pillarUrl, t(isPaint ? UI.nav.painting : UI.nav.maintenance, lang)],
     [null, t(s.name, lang)]
   ];
   const related = (s.related || []).map(findService).filter(Boolean).slice(0, 4);
-  const faqs = t(s.faqs, lang);
+  const extra = EXTRA[s.slug] ? EXTRA[s.slug][lang] : null;
+  const faqs = [...t(s.faqs, lang), ...(extra && extra.extraFaq ? [extra.extraFaq] : [])];
   const jsonld = [
     breadcrumbLd(trail),
     {
       "@context": "https://schema.org", "@type": "Service",
       name: t(s.name, "en"), serviceType: t(s.name, "en"),
-      provider: { "@type": "Organization", name: "QSC Automotive", telephone: business.mainPhone },
+      provider: { "@type": "AutomotiveBusiness", name: "QSC Automotive", telephone: w.phone },
       areaServed: { "@type": "City", name: "Riyadh" },
       url: SITE + pathname
     },
     faqLd(faqs)
   ];
+  const costNote = ar
+    ? "التسعير في QSC يتبع الفحص لا يسبقه: تستلم بعد التقييم نطاق العمل المقترح وتكلفته للموافقة، ولا يُنفَّذ إلا ما وافقت عليه. أما المدة فتُقدَّر بواقعية لكل عمل بعينه — ولا ننشر وعودًا معممة لا نستطيع الوفاء بها لكل حالة."
+    : "Pricing at QSC follows the assessment, never precedes it: after evaluation you receive the proposed scope and its cost for approval, and only what you approve is carried out. Durations are estimated realistically per job — we publish no blanket promises we could not keep for every case.";
   const body = `
 <section class="page-hero"><div class="container">
   <span class="eyebrow">${isPaint ? (ar ? "الدهان والسمكرة" : "PAINTING & BODYWORK") : (ar ? "الصيانة" : "MAINTENANCE")} · ${t(UI.categories[s.category], lang)}</span>
@@ -505,21 +563,38 @@ function servicePage(lang, s) {
 </div></section>
 ${breadcrumbs(lang, trail)}
 <section class="section section--tight"><div class="container split">
-  <div class="prose">
+  <div class="prose deep">
     <p class="lead">${esc(t(s.intro, lang))}</p>
+    ${extra ? extra.detail.map(d => `<p>${esc(d)}</p>`).join("") : ""}
     ${ph(ar ? `الصورة قيد التجهيز — ${t(s.name, lang)}` : `PHOTO PENDING — ${t(s.name, "en").toUpperCase()}`, "ph--light")}
     <h2 style="margin-top:40px">${t(UI.common.whoNeeds, lang)}</h2>
-    <ul>${t(s.symptoms, lang).map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+    <hr class="rule">
+    <ul style="margin-top:18px">${t(s.symptoms, lang).map(x => `<li>${esc(x)}</li>`).join("")}</ul>
     <h2 style="margin-top:40px">${t(UI.common.whatWeDo, lang)}</h2>
+    <hr class="rule">
     <div class="steps">${t(s.scope, lang).map(x => `<div class="step"><p style="margin:0">${esc(x)}</p></div>`).join("")}</div>
+    ${extra ? `<h2 style="margin-top:40px">${ar ? "لماذا QSC لهذه الخدمة" : "Why QSC for this service"}</h2>
+    <hr class="rule">
+    <ul class="checklist">${extra.why.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+    <h2 style="margin-top:40px">${ar ? "السعر والمدة — بصراحة" : "Cost and time — honestly"}</h2>
+    <hr class="rule">
+    <p style="margin-top:18px">${costNote}</p>
   </div>
   <aside class="panel">
     <span class="eyebrow">${t(UI.common.handledAt, lang)}</span>
     <h3>${esc(t(w.name, lang))}</h3>
-    <p class="contact-line">${esc(t(w.role, lang))}</p>
+    <p class="contact-line">${esc(t(w.address, lang))}</p>
+    <p class="contact-line">${esc(t(w.hours, lang))}</p>
     ${ctaGroup(lang, s.branch, { service: s.slug })}
-    <p class="contact-line"><a href="/${lang}/workshops/${w.slug}/">${t(UI.common.viewWorkshop, lang)} ${ar ? "←" : "→"}</a></p>
+    <p class="contact-line"><a href="${P(lang, `/workshops/${w.slug}/`)}">${t(UI.common.viewWorkshop, lang)} ${ar ? "←" : "→"}</a></p>
   </aside>
+</div></section>
+<section class="section section--cloud section--tight"><div class="container">
+  <span class="eyebrow">${ar ? "خطوات زيارتك" : "YOUR VISIT"}</span>
+  <h2>${t(UI.common.processHeading, lang)}</h2>
+  <div class="steps">
+    ${t(UI.common.process, lang).map(([h, p2]) => `<div class="step"><div><h3>${esc(h)}</h3><p>${esc(p2)}</p></div></div>`).join("")}
+  </div>
 </div></section>
 ${faqBlock(lang, faqs)}
 <section class="section section--cloud"><div class="container">
@@ -532,12 +607,13 @@ ${faqBlock(lang, faqs)}
 /* ---------- Brands hub & brand pages ---------- */
 function brandsHub(lang) {
   const ar = lang === "ar";
-  const pathname = `/${lang}/car-brands/`;
-  const trail = [[`/${lang}/`, t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.brands, lang)]];
+  const pathname = P(lang, "/car-brands/");
+  const trail = [[P(lang, "/"), t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.brands, lang)]];
   const title = ar ? "ماركات السيارات التي نخدمها في الرياض | QSC Automotive" : "Luxury Car Brands We Service in Riyadh | QSC Automotive";
   const desc = ar
     ? "من مرسيدس وBMW وبورشه إلى فيراري ورولز-رويس: تعرف على خدمات QSC المستقلة لـ16 علامة فاخرة في الرياض — صيانة ودهان وسمكرة."
     : "From Mercedes-Benz, BMW and Porsche to Ferrari and Rolls-Royce: QSC's independent services for 16 luxury marques in Riyadh — maintenance, painting and bodywork.";
+  const hubFaqs = t(pageFaqs.brandsHub, lang);
   const body = `
 <section class="page-hero"><div class="container">
   <span class="eyebrow">${ar ? "دليل الماركات" : "BRAND DIRECTORY"}</span>
@@ -550,36 +626,57 @@ ${breadcrumbs(lang, trail)}
 <section class="section section--tight"><div class="container">
   <div class="grid grid--4">
     ${brands.map(b => `<article class="card">
-      <h3><a href="/${lang}/car-brands/${b.slug}/" style="color:inherit">${esc(t(b.name, lang))}</a></h3>
+      <h3><a href="${P(lang, `/car-brands/${b.slug}/`)}" style="color:inherit">${esc(t(b.name, lang))}</a></h3>
       <p>${esc(t(b.intro, lang).split(/(?<=[.؟!،—])\s/).slice(0, 1).join(" ")).slice(0, 170)}…</p>
-      <a class="card-link" href="/${lang}/car-brands/${b.slug}/">${t(UI.common.learnMore, lang)} ${ar ? "←" : "→"}</a>
+      <a class="card-link" href="${P(lang, `/car-brands/${b.slug}/`)}">${t(UI.common.learnMore, lang)} ${ar ? "←" : "→"}</a>
     </article>`).join("")}
   </div>
   <div class="notice notice--muted">${t(UI.common.independentNote, lang)}</div>
-</div></section>`;
-  return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld: [breadcrumbLd(trail)] }, body, { pageType: "brands-hub" });
+  <div class="prose deep" style="margin-top:44px">
+    <h2>${ar ? "لماذا نرتب الخدمة حسب الماركة؟" : "Why organize service by marque?"}</h2>
+    <hr class="rule">
+    <p style="margin-top:18px">${ar
+      ? "لأن كل علامة تحمل شخصيتها الهندسية: تعليق مرسيدس الهوائي له أنماط أعطاله، وقيرات BMW ثنائية القابض لها احتياجات خدمتها، وهياكل رنج روفر الألمنيوم لها قواعد إصلاحها، وألوان فيراري لها حساسيات مطابقتها. صفحة الماركة تجمع لك خلاصة تعاملنا مع علامتك — الخدمات التي تطلبها سياراتها فعلًا، والورشة المسؤولة عن كل عمل، وطريق الحجز المباشر — بدل أن تبحث عنها مبعثرة."
+      : "Because every marque carries its own engineering personality: Mercedes air suspension has its failure patterns, BMW dual-clutch gearboxes their service needs, Range Rover aluminium bodies their repair rules, Ferrari colors their matching sensitivities. The brand page gathers the essence of how we work with your marque — the services its cars actually ask for, the workshop responsible for each job, and the direct booking path — instead of leaving you to find it scattered."}</p>
+    <p>${ar
+      ? "ستلاحظ صراحة الصفحات: حيث خبرتنا عميقة نقولها، وحيث يكون الصانع هو الجواب الصحيح — كما في بعض أعمال بوغاتي وباغاني — نقول ذلك أيضًا. فالثقة التي نبنيها بالصدق في صفحة واحدة تخدمك في السيارة كلها."
+      : "You will notice the pages' frankness: where our depth is real we say so, and where the manufacturer is the right answer — as for certain Bugatti and Pagani work — we say that too. The trust built by honesty on one page serves you across the whole car."}</p>
+  </div>
+</div></section>
+${faqBlock(lang, hubFaqs, { cloud: true })}`;
+  return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld: [breadcrumbLd(trail), faqLd(hubFaqs)] }, body, { pageType: "brands-hub" });
 }
 
 function brandPage(lang, b) {
   const ar = lang === "ar";
-  const pathname = `/${lang}/car-brands/${b.slug}/`;
+  const pathname = P(lang, `/car-brands/${b.slug}/`);
   const trail = [
-    [`/${lang}/`, t(UI.common.breadcrumbHome, lang)],
-    [`/${lang}/car-brands/`, t(UI.nav.brands, lang)],
+    [P(lang, "/"), t(UI.common.breadcrumbHome, lang)],
+    [P(lang, "/car-brands/"), t(UI.nav.brands, lang)],
     [null, t(b.name, lang)]
   ];
   const maint = b.maintenanceFocus.map(findService).filter(Boolean);
   const paint = b.paintingFocus.map(findService).filter(Boolean);
-  const faqs = t(b.faq, lang);
+  const genericFaqs = ar
+    ? [
+      [`هل QSC وكيل معتمد لـ${t(b.name, "ar")}؟`, `لا — QSC ورشة متخصصة مستقلة تخدم سيارات ${t(b.name, "ar")} وفق جداول الصانع وإجراءاته، دون أي ادعاء اعتماد أو ارتباط مصنعي. اسم العلامة يصف السيارات المخدومة فقط.`],
+      [`كيف أحجز خدمة لسيارتي ${t(b.name, "ar")}؟`, `اتصل أو أرسل واتساب أو استخدم نموذج الحجز مع اختيار ${t(b.name, "ar")} كماركة — يتولى فريق الورشة المناسبة (صيانة أو دهان) تأكيد الموعد معك مباشرة.`]
+    ]
+    : [
+      [`Is QSC an authorized ${t(b.name, "en")} service center?`, `No — QSC is an independent specialist servicing ${t(b.name, "en")} vehicles to the manufacturer's schedules and procedures, with no claim of authorization or factory affiliation. The brand name describes the vehicles serviced, nothing more.`],
+      [`How do I book service for my ${t(b.name, "en")}?`, `Call, send a WhatsApp message or use the booking form with ${t(b.name, "en")} selected as the make — the right workshop's team (maintenance or painting) confirms the appointment with you directly.`]
+    ];
+  const faqs = [...t(b.faq, lang), ...genericFaqs];
   const body = `
 <section class="page-hero"><div class="container">
   <span class="eyebrow">${ar ? "ماركة السيارة" : "VEHICLE BRAND"}</span>
-  <h1>${ar ? `خدمات ${t(b.name, ar ? "ar" : "en")} في الرياض` : `${t(b.name, "en")} services in Riyadh`}</h1>
+  <h1>${ar ? `خدمات ${t(b.name, "ar")} في الرياض` : `${t(b.name, "en")} services in Riyadh`}</h1>
   <p>${esc(t(b.metaDesc, lang))}</p>
 </div></section>
 ${breadcrumbs(lang, trail)}
-<section class="section section--tight"><div class="container">
-  <p class="lead prose">${esc(t(b.intro, lang))}</p>
+<section class="section section--tight"><div class="container prose deep">
+  <p class="lead">${esc(t(b.intro, lang))}</p>
+  ${brandsExtra[b.slug] ? `<p>${esc(brandsExtra[b.slug][lang])}</p>` : ""}
   ${ph(ar ? `الصورة قيد التجهيز — أعمال ${t(b.name, lang)}` : `PHOTO PENDING — ${t(b.name, "en").toUpperCase()} WORK AT QSC`, "ph--light")}
   <div class="notice notice--muted">${t(UI.common.independentNote, lang)}</div>
 </div></section>
@@ -593,16 +690,17 @@ ${breadcrumbs(lang, trail)}
   <h2>${ar ? `دهان وسمكرة ${t(b.name, lang)}` : `${t(b.name, "en")} paint & body`}</h2>
   <div class="grid grid--4">${paint.slice(0, 4).map(s => serviceCard(lang, s)).join("")}</div>
 </div></section>
+${processSection(lang)}
 ${faqBlock(lang, faqs)}
 <section class="section section--dark"><div class="container center">
   <h2>${ar ? `احجز خدمة لسيارتك ${t(b.name, lang)}` : `Book service for your ${t(b.name, "en")}`}</h2>
   <div class="actions" style="justify-content:center">
-    <a class="btn btn--primary" href="/${lang}/book-appointment/?brand=${encodeURIComponent(t(b.name, "en"))}">${t(UI.common.bookForBrand, lang)} ${esc(t(b.name, lang))}</a>
-    <a class="btn btn--ghost-light" data-contact="phone" data-workshop="org" data-brand="${esc(t(b.name, "en"))}" href="tel:${business.mainPhone}">${t(UI.common.callUs, lang)} QSC</a>
+    <a class="btn btn--primary" href="${P(lang, "/book-appointment/")}?brand=${encodeURIComponent(t(b.name, "en"))}">${t(UI.common.bookForBrand, lang)} ${esc(t(b.name, lang))}</a>
+    <a class="btn btn--ghost-light" data-contact="phone" data-workshop="maintenance" data-brand="${esc(t(b.name, "en"))}" href="tel:${workshops.maintenance.phone}">${t(UI.common.callUs, lang)} QSC</a>
   </div>
 </div></section>`;
   return page(lang, {
-    title: t(b.metaTitle, lang), desc: t(b.metaDesc, lang), pathname, navCurrent: `/${lang}/car-brands/`,
+    title: t(b.metaTitle, lang), desc: t(b.metaDesc, lang), pathname, navCurrent: P(lang, "/car-brands/"),
     jsonld: [breadcrumbLd(trail), faqLd(faqs)]
   }, body, { pageType: "brand" });
 }
@@ -610,12 +708,13 @@ ${faqBlock(lang, faqs)}
 /* ---------- Workshops hub & detail ---------- */
 function workshopsHub(lang) {
   const ar = lang === "ar";
-  const pathname = `/${lang}/workshops/`;
-  const trail = [[`/${lang}/`, t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.workshops, lang)]];
+  const pathname = P(lang, "/workshops/");
+  const trail = [[P(lang, "/"), t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.workshops, lang)]];
   const title = ar ? "ورشتا QSC في الرياض — الصيانة والدهان | QSC Automotive" : "QSC's Two Workshops in Riyadh — Maintenance & Painting | QSC";
   const desc = ar
     ? "منشأتان متخصصتان بعنوانين مستقلين في الرياض: ورشة الصيانة الميكانيكية والفنية، وورشة الدهان والسمكرة (الدهان السريع). تعرف على كل موقع وطريقة الوصول والحجز."
     : "Two dedicated facilities at two separate Riyadh addresses: the mechanical & technical maintenance workshop, and the painting & bodywork (Fast Painting) workshop. Find each location, directions and booking.";
+  const wsFaqs = t(pageFaqs.workshops, lang);
   const body = `
 <section class="page-hero"><div class="container">
   <span class="eyebrow">${ar ? "منشآتنا" : "OUR FACILITIES"}</span>
@@ -630,22 +729,30 @@ ${breadcrumbs(lang, trail)}
     ${workshopSummaryCard(lang, "maintenance")}
     ${workshopSummaryCard(lang, "painting")}
   </div>
-  <div class="notice notice--muted">${ar
-    ? "العناوين الدقيقة ومواقع الخرائط وأرقام الفروع قيد التأكيد النهائي من QSC — وحتى اكتماله يصلك الرقم الرئيسي بالفريق الصحيح."
-    : "Exact street addresses, map pins and branch lines are in final confirmation with QSC — until then, the main line connects you to the right team."}</div>
+  <div class="prose deep" style="margin-top:44px">
+    <h2>${ar ? "منطق الورشتين" : "The logic of two workshops"}</h2>
+    <hr class="rule">
+    <p style="margin-top:18px">${ar
+      ? "حين تجمع ورشة واحدة الميكانيكا والدهان تحت سقف واحد فهي تساوم حتمًا: غبار الصنفرة والمعادن يجد طريقه إلى غرف الرش، ومساحة الدهان تزاحم رافعات الميكانيكا، والفنيون يتوزعون بين حرفتين بدل إتقان واحدة. اختارت QSC الفصل الكامل — منشأة للصيانة بخلجان تشخيصها وميكانيكاها ومحطة زواياها، ومنشأة للدهان بغرفها المضبوطة ومختبر ألوانها ومعدات شاصيها — ليعمل كل فريق في البيئة التي تتطلبها حرفته."
+      : "When one workshop puts mechanics and paint under the same roof, it inevitably compromises: sanding and metal dust finds its way into spray booths, paint space competes with mechanical lifts, and technicians split between two crafts instead of mastering one. QSC chose complete separation — a maintenance facility with its diagnostic bays, mechanical zones and alignment station, and a painting facility with its controlled booths, color lab and chassis equipment — so each team works in the environment its craft demands."}</p>
+    <p>${ar
+      ? "وما يجمع المنشأتين أهم مما يفصلهما: معيار QSC الواحد. الفحص قبل الإصلاح، والنطاق المكتوب قبل العمل، والتوثيق بعد الإنجاز — تجدها في الخليجين على السواء. وحين تحتاج سيارتك الاثنين، كبعد حادث يتطلب سمكرة ثم فحص أنظمة، ينسق الفريقان التسليم بينهما وتبقى أنت أمام جهة واحدة مسؤولة."
+      : "What unites the facilities matters more than what separates them: the single QSC standard. Assessment before repair, a written scope before work, documentation after completion — you find them in both buildings alike. And when your car needs both, as after an accident requiring body repair followed by systems checks, the two teams coordinate the handover between them and you face one accountable QSC throughout."}</p>
+  </div>
 </div></section>
-${processSection(lang)}`;
-  return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld: [breadcrumbLd(trail)] }, body, { pageType: "workshops-hub" });
+${processSection(lang)}
+${faqBlock(lang, wsFaqs)}`;
+  return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld: [breadcrumbLd(trail), faqLd(wsFaqs)] }, body, { pageType: "workshops-hub" });
 }
 
 function workshopPage(lang, wid) {
   const ar = lang === "ar";
   const w = workshops[wid];
   const isPaint = wid === "painting";
-  const pathname = `/${lang}/workshops/${w.slug}/`;
+  const pathname = P(lang, `/workshops/${w.slug}/`);
   const trail = [
-    [`/${lang}/`, t(UI.common.breadcrumbHome, lang)],
-    [`/${lang}/workshops/`, t(UI.nav.workshops, lang)],
+    [P(lang, "/"), t(UI.common.breadcrumbHome, lang)],
+    [P(lang, "/workshops/"), t(UI.nav.workshops, lang)],
     [null, t(w.shortName, lang)]
   ];
   const list = services.filter(s => s.branch === wid).slice(0, 6);
@@ -655,7 +762,19 @@ function workshopPage(lang, wid) {
   const desc = ar
     ? `${t(w.role, "ar")} تعرف على الموقع وطرق التواصل والحجز.`
     : `${t(w.role, "en")} Find the location, contact options and booking path.`;
-  const pendingAddr = String(t(w.address, lang)).startsWith("PENDING");
+  const wsFaqs = t(pageFaqs.workshops, lang);
+  const jsonld = [
+    breadcrumbLd(trail),
+    {
+      "@context": "https://schema.org", "@type": "AutomotiveBusiness",
+      name: t(w.name, "en"), url: SITE + P("en", `/workshops/${w.slug}/`),
+      telephone: w.phone,
+      address: { "@type": "PostalAddress", streetAddress: t(w.address, "en"), addressLocality: "Riyadh", addressCountry: "SA" },
+      openingHours: "Sa-Th 08:00-20:00",
+      parentOrganization: { "@type": "Organization", name: "QSC Automotive" }
+    },
+    faqLd(wsFaqs)
+  ];
   const body = `
 <section class="page-hero"><div class="container">
   <span class="eyebrow">${ar ? "ملف الورشة" : "WORKSHOP PROFILE"}</span>
@@ -670,34 +789,51 @@ ${breadcrumbs(lang, trail)}
     <p class="lead">${isPaint
       ? (ar ? "هذه هي منشأة QSC الثانية، المكرسة بالكامل للدهان والسمكرة، وتعمل باسم «الدهان السريع». كل أعمال الدهان وإصلاح الهيكل ومطابقة الألوان وقياس الشاصي تُنفَّذ هنا — وتبدأ غالبًا بتقييم من الصور." : "This is QSC's second facility, wholly dedicated to paint and body and operating as the Fast Painting workshop. All painting, body repair, color matching and chassis measurement happens here — usually starting with a photo assessment.")
       : (ar ? "هذه منشأة QSC الأولى، المكرسة للصيانة الميكانيكية والكهربائية والفحص الحاسوبي والعناية الدورية. تبدأ كل زيارة بالتشخيص وتنتهي بتقرير موثق." : "This is QSC's first facility, dedicated to mechanical and electrical repair, diagnostics and scheduled care. Every visit starts with diagnosis and ends with a documented report.")}</p>
+    <div class="prose deep">
+    ${isPaint
+      ? `<p>${ar
+          ? "جولة في المنشأة تمر على محطات العمل بترتيب الرحلة نفسها التي تقطعها السيارة: منطقة الاستقبال والتقييم حيث يُفحص الضرر ويُوثق ويُتفق على النطاق؛ ثم خليج السمكرة بمعدات قياس الشاصي وأدوات إصلاح الألمنيوم والفولاذ؛ ثم مختبر الألوان حيث يُقاس لون سيارتك طيفيًا وتُرش بطاقات الاختبار؛ ثم غرف الرش المضبوطة؛ وأخيرًا منطقة التشطيب حيث تُسوى النتيجة وتُلمع وتُفحص تحت مصادر إضاءة متعددة قبل الاتصال بك."
+          : "A tour of the facility follows the same journey the car takes: the reception and assessment area where damage is examined, documented and scoped; the body bay with chassis-measurement equipment and aluminium- and steel-correct repair tooling; the color lab where your car's paint is measured spectrally and test cards are sprayed; the controlled spray booths; and finally the finishing area where the result is flatted, polished and inspected under multiple light sources before you get the call."}</p>
+        <p>${ar
+          ? "اسم «الدهان السريع» وُلد من طريقة عمل المنشأة لا من استعجال العمل: التقييم من الصور يختصر الزيارات، والنطاق المتفق عليه مسبقًا يلغي المفاجآت، والجدولة المنظمة تعني أن سيارتك لا تنتظر في الطابور بل تدخل حين يكون فريقها ومعداتها جاهزين لها. أما مراحل التحضير والمعالجة فتأخذ وقتها كاملًا دائمًا — لأن الاختصار فيها يظهر على السطح خلال أشهر."
+          : "The 'Fast Painting' name comes from how the facility is organized, not from hurried work: photo assessment cuts out exploratory visits, a pre-agreed scope eliminates surprises, and disciplined scheduling means your car does not sit in a queue but enters when its team and equipment are ready for it. Preparation and curing stages always take their full time — because shortcuts there surface, literally, within months."}</p>`
+      : `<p>${ar
+          ? "تنظّم المنشأة أعمالها حول أربع مناطق: خلجان التشخيص حيث تُقرأ أنظمة السيارة وتُجرى الاختبارات الموجهة؛ وخلجان الميكانيكا العامة للمحركات ونواقل الحركة والفرامل والتعليق؛ ومحطة ضبط الزوايا والهندسة؛ ومنطقة الصيانة الدورية حيث تجري الخدمات المجدولة والفحوص متعددة النقاط. لكل منطقة فنيوها ومعداتها، وتنتقل السيارة بينها وفق ما يكشفه التشخيص لا وفق افتراضات مسبقة."
+          : "The facility organizes its work around four zones: diagnostic bays where the car's systems are read and guided tests performed; general mechanical bays for engines, transmissions, brakes and suspension; the wheel-alignment and geometry station; and the scheduled-maintenance area where periodic services and multi-point inspections run. Each zone has its technicians and equipment, and a car moves between them according to what diagnosis reveals, not prior assumptions."}</p>
+        <p>${ar
+          ? "ما يلمسه العميل من هذا التنظيم شيئان: سرعة الوصول إلى السبب، لأن السيارة تذهب مباشرة إلى الفني والمعدة المناسبين؛ وجودة التوثيق، لأن كل محطة تسجل ما وجدته وما فعلته. وفي نهاية الزيارة يتجمع ذلك كله في تقرير واحد مفهوم: ما فُحص، وما وُجد، وما نُفذ، وما يستحق المراقبة مستقبلًا — وهو التقرير الذي يبني مع الوقت سجل سيارتك لدى QSC."
+          : "What customers feel from this organization is two things: speed to the cause, because the car goes straight to the right technician and equipment; and quality of documentation, because every station records what it found and did. At the end of the visit it all converges into one readable report: what was checked, what was found, what was done, and what deserves watching — the report that, over time, builds your car's file at QSC."}</p>`}
+    </div>
     <h2 style="margin-top:36px">${ar ? "أبرز الخدمات" : "Key services"}</h2>
     <div class="grid grid--3" style="margin-top:18px">${list.map(s => serviceCard(lang, s)).join("")}</div>
-    <div class="actions"><a class="btn btn--dark" href="/${lang}/${pillarSlug(wid)}/">${ar ? "جميع خدمات هذه الورشة" : "All services at this workshop"}</a></div>
+    <div class="actions"><a class="btn btn--dark" href="${P(lang, `/${pillarSlug(wid)}/`)}">${ar ? "جميع خدمات هذه الورشة" : "All services at this workshop"}</a></div>
   </div>
   <aside class="panel">
     <h3>${ar ? "الموقع والتواصل" : "Location & contact"}</h3>
     <ul class="workshop-meta">
-      <li><span class="k">${ar ? "العنوان" : "Address"}</span><span>${pendingAddr ? t(UI.common.addressPending, lang) : esc(t(w.address, lang))}</span></li>
-      <li><span class="k">${ar ? "الهاتف" : "Phone"}</span><span>${w.phone ? esc(w.phone) : `${t(UI.common.phonePendingBranch, lang)} <span dir="ltr">${esc(business.mainPhoneDisplay)}</span>`}</span></li>
-      <li><span class="k">${ar ? "الدوام" : "Hours"}</span><span>${w.hours ? esc(w.hours) : esc(t(business.hoursLegacy, lang))}</span></li>
+      <li><span class="k">${ar ? "العنوان" : "Address"}</span><span>${esc(t(w.address, lang))}</span></li>
+      <li><span class="k">${ar ? "الهاتف" : "Phone"}</span><span><a href="tel:${w.phone}" data-contact="phone" data-workshop="${wid}" dir="ltr">${esc(w.phoneDisplay)}</a></span></li>
+      <li><span class="k">${ar ? "الدوام" : "Hours"}</span><span>${esc(t(w.hours, lang))}</span></li>
     </ul>
     ${ctaGroup(lang, wid)}
     <a class="btn btn--ghost" data-contact="map" data-workshop="${wid}" href="#">${t(UI.common.getDirections, lang)}</a>
   </aside>
 </div></section>
-${statsStrip(lang)}`;
-  return page(lang, { title, desc, pathname, navCurrent: `/${lang}/workshops/`, jsonld: [breadcrumbLd(trail)] }, body, { pageType: "workshop" });
+${statsStrip(lang)}
+${faqBlock(lang, wsFaqs)}`;
+  return page(lang, { title, desc, pathname, navCurrent: P(lang, "/workshops/"), jsonld }, body, { pageType: "workshop" });
 }
 
 /* ---------- Service areas ---------- */
 function serviceAreasHub(lang) {
   const ar = lang === "ar";
-  const pathname = `/${lang}/service-areas/`;
-  const trail = [[`/${lang}/`, t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.serviceAreas, lang)]];
+  const pathname = P(lang, "/service-areas/");
+  const trail = [[P(lang, "/"), t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.serviceAreas, lang)]];
   const title = ar ? "مناطق الخدمة | QSC Automotive" : "Service Areas | QSC Automotive";
   const desc = ar
     ? "تخدم QSC عملاءها من منشأتيها في الرياض. تعرف على نطاق الخدمة وإمكانية استلام السيارة من خارج المدينة — بتأكيد فردي لكل حالة."
     : "QSC serves customers from its two Riyadh facilities. See the service area and how vehicle pickup from outside the city works — confirmed individually per case.";
+  const saFaqs = t(pageFaqs.serviceAreas, lang);
   const body = `
 <section class="page-hero"><div class="container">
   <span class="eyebrow">${ar ? "نطاق الخدمة" : "SERVICE COVERAGE"}</span>
@@ -711,33 +847,45 @@ ${breadcrumbs(lang, trail)}
   <div class="grid grid--2">
     <article class="card">
       <span class="card-tag">${ar ? "المنطقة الرئيسية" : "PRIMARY AREA"}</span>
-      <h3><a href="/${lang}/service-areas/riyadh/" style="color:inherit">${ar ? "الرياض" : "Riyadh"}</a></h3>
+      <h3><a href="${P(lang, "/service-areas/riyadh/")}" style="color:inherit">${ar ? "الرياض" : "Riyadh"}</a></h3>
       <p>${ar ? "ورشتا الصيانة والدهان كلتاهما في الرياض — زيارات مباشرة وحجز بالهاتف أو واتساب أو النموذج." : "Both the maintenance and painting workshops are in Riyadh — walk-in by appointment, booked by phone, WhatsApp or form."}</p>
-      <a class="card-link" href="/${lang}/service-areas/riyadh/">${t(UI.common.learnMore, lang)} ${ar ? "←" : "→"}</a>
+      <a class="card-link" href="${P(lang, "/service-areas/riyadh/")}">${t(UI.common.learnMore, lang)} ${ar ? "←" : "→"}</a>
     </article>
     <article class="card">
       <span class="card-tag">${ar ? "خارج الرياض" : "OUTSIDE RIYADH"}</span>
       <h3>${ar ? "استفسار الاستلام والتسليم" : "Pickup & delivery inquiry"}</h3>
       <p>${ar ? "إن كنت خارج الرياض فاستفسر عن إمكانية استلام سيارتك — يؤكد الفريق التوفر والترتيبات لحالتك قبل أي التزام." : "If you are outside Riyadh, ask about vehicle collection — the team confirms availability and arrangements for your case before any commitment."}</p>
-      <a class="card-link" href="/${lang}/maintenance/pickup-delivery/">${t(UI.common.learnMore, lang)} ${ar ? "←" : "→"}</a>
+      <a class="card-link" href="${P(lang, "/maintenance/pickup-delivery/")}">${t(UI.common.learnMore, lang)} ${ar ? "←" : "→"}</a>
     </article>
   </div>
-</div></section>`;
-  return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld: [breadcrumbLd(trail)] }, body, { pageType: "service-areas" });
+  <div class="prose deep" style="margin-top:44px">
+    <h2>${ar ? "كيف تعمل التغطية فعليًا" : "How coverage actually works"}</h2>
+    <hr class="rule">
+    <p style="margin-top:18px">${ar
+      ? "داخل الرياض، الخدمة مباشرة: تحجز موعدًا وتحضر سيارتك إلى الورشة المناسبة — الصيانة لعملها والدهان لعمله — أو تطلب استلامها من موقعك حين يصعب الحضور. يصل عملاؤنا من أنحاء المدينة كلها: من شمالها وجنوبها وشرقها وغربها، ومن ضواحيها القريبة، لأن السيارة الفاخرة تستحق قطع مسافة إضافية إلى فريق يعرفها."
+      : "Inside Riyadh, service is direct: you book an appointment and bring the car to the right workshop — maintenance for its work, painting for its own — or request collection from your location when coming in is difficult. Our customers arrive from every part of the city, north to south and east to west, and from its near suburbs, because a luxury car justifies the extra kilometres to a team that knows it."}</p>
+    <p>${ar
+      ? "خارج الرياض، الصدق أولًا: لا ندّعي فروعًا في مدن أخرى ولا ننشر وعود استلام معممة. ما نقدمه هو مسار استفسار واضح — تخبرنا بموقع السيارة وحالتها والخدمة المطلوبة، فيؤكد الفريق إمكانية الترتيب وكلفته قبل أي التزام. كثير من عملائنا في المدن المجاورة يرتبون نقل سياراتهم إلينا لأعمال الدهان والترميم الكبيرة خاصة، حيث يستحق مستوى التنفيذ رحلة السطحة."
+      : "Outside Riyadh, honesty first: we claim no branches in other cities and publish no blanket pickup promises. What we offer is a clear inquiry path — you tell us the car's location, condition and the service needed, and the team confirms what can be arranged and at what cost before any commitment. Many customers in nearby cities arrange transport to us especially for major paint and restoration work, where the standard of execution justifies the flatbed journey."}</p>
+  </div>
+</div></section>
+${faqBlock(lang, saFaqs, { cloud: true })}`;
+  return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld: [breadcrumbLd(trail), faqLd(saFaqs)] }, body, { pageType: "service-areas" });
 }
 
 function riyadhPage(lang) {
   const ar = lang === "ar";
-  const pathname = `/${lang}/service-areas/riyadh/`;
+  const pathname = P(lang, "/service-areas/riyadh/");
   const trail = [
-    [`/${lang}/`, t(UI.common.breadcrumbHome, lang)],
-    [`/${lang}/service-areas/`, t(UI.nav.serviceAreas, lang)],
+    [P(lang, "/"), t(UI.common.breadcrumbHome, lang)],
+    [P(lang, "/service-areas/"), t(UI.nav.serviceAreas, lang)],
     [null, ar ? "الرياض" : "Riyadh"]
   ];
   const title = ar ? "صيانة ودهان السيارات الفاخرة في الرياض | QSC Automotive" : "Luxury Car Service in Riyadh | QSC Automotive";
   const desc = ar
     ? "QSC في الرياض: ورشة صيانة متخصصة وورشة دهان وسمكرة مستقلة للسيارات الفاخرة. 26 خدمة و16 علامة مدعومة وحجز بثلاث قنوات."
     : "QSC in Riyadh: a dedicated maintenance workshop and a separate painting & bodywork facility for luxury vehicles. 26 services, 16 supported marques, three booking channels.";
+  const saFaqs = t(pageFaqs.serviceAreas, lang);
   const body = `
 <section class="page-hero"><div class="container">
   <span class="eyebrow">${ar ? "منطقة الخدمة" : "SERVICE AREA"}</span>
@@ -756,20 +904,32 @@ ${breadcrumbs(lang, trail)}
 <section class="section section--cloud"><div class="container">
   <h2>${ar ? "الخدمات الأكثر طلبًا في الرياض" : "Most requested services in Riyadh"}</h2>
   <div class="grid grid--3">${["ac-repair", "suspension", "engine-repair", "car-painting", "dent-repair", "periodic-maintenance"].map(sl => serviceCard(lang, findService(sl))).join("")}</div>
+  <div class="prose deep" style="margin-top:44px">
+    <h2>${ar ? "سيارة فاخرة في الرياض — ماذا يعني ذلك عمليًا" : "A luxury car in Riyadh — what that means in practice"}</h2>
+    <hr class="rule">
+    <p style="margin-top:18px">${ar
+      ? "مناخ الرياض يعيد ترتيب أولويات الصيانة: التكييف والتبريد يتصدران قائمة الصيف، والبطاريات تهرم أسرع مما تتوقع جداول الصانع الأوروبية، والتعليق الهوائي يواجه مزيج الحرارة والغبار الذي يختبر موانعه يوميًا. وتضيف طرق المدينة نصيبها — مطبات تفاجئ الجنوط المنخفضة، ومواقف ضيقة تترك بصماتها على الأبواب والصدامات. خدمات QSC الست والعشرون مبنية حول هذه الحقائق بالذات."
+      : "Riyadh's climate reorders maintenance priorities: AC and cooling top the summer list, batteries age faster than European service schedules expect, and air suspension faces the heat-and-dust combination that tests its seals daily. The city's roads add their share — speed bumps that surprise low-profile wheels, tight parking that leaves its marks on doors and bumpers. QSC's twenty-six services are built around exactly these realities."}</p>
+    <p>${ar
+      ? "ولأن المدينة كبيرة، صُمم الوصول إلينا ليكون سهلًا من أي حي: حجز مسبق يلغي الانتظار، وتقييم بالصور يغنيك عن زيارة استكشافية، واستلام للسيارة من موقعك حين يصعب الحضور. أيًا كان حيّك — من العليا إلى النرجس ومن الياسمين إلى الملقا — فالمسافة إلى عناية تستحقها سيارتك أقصر مما تظن."
+      : "And because the city is large, reaching us is designed to be easy from any district: advance booking eliminates waiting, photo assessment saves you an exploratory visit, and vehicle collection from your location covers the days you cannot come in. Whatever your district — Olaya to Al Narjis, Al Yasmin to Al Malqa — the distance to care your car deserves is shorter than you think."}</p>
+  </div>
 </div></section>
-${statsStrip(lang)}`;
-  return page(lang, { title, desc, pathname, navCurrent: `/${lang}/service-areas/`, jsonld: [breadcrumbLd(trail)] }, body, { pageType: "service-area" });
+${statsStrip(lang)}
+${faqBlock(lang, saFaqs)}`;
+  return page(lang, { title, desc, pathname, navCurrent: P(lang, "/service-areas/"), jsonld: [breadcrumbLd(trail), faqLd(saFaqs)] }, body, { pageType: "service-area" });
 }
 
 /* ---------- About ---------- */
 function aboutPage(lang) {
   const ar = lang === "ar";
-  const pathname = `/${lang}/about/`;
-  const trail = [[`/${lang}/`, t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.about, lang)]];
+  const pathname = P(lang, "/about/");
+  const trail = [[P(lang, "/"), t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.about, lang)]];
   const title = ar ? "عن QSC Automotive — من نحن" : "About QSC Automotive";
   const desc = ar
     ? "QSC Automotive: شركة سعودية متخصصة بالعناية بالسيارات الفاخرة في الرياض عبر منشأتين — صيانة متخصصة ودهان وسمكرة. تعرف على نهجنا وأرقامنا."
     : "QSC Automotive: a Saudi specialist in luxury-vehicle care operating two Riyadh facilities — dedicated maintenance, and painting & bodywork. Our approach, in plain terms.";
+  const aboutFaqs = t(pageFaqs.about, lang);
   const body = `
 <section class="page-hero"><div class="container">
   <span class="eyebrow">${ar ? "من نحن" : "ABOUT QSC"}</span>
@@ -787,29 +947,47 @@ ${breadcrumbs(lang, trail)}
     ? "الورشة الأولى مكرسة للصيانة الميكانيكية والكهربائية والفحص الحاسوبي، والثانية — ورشة الدهان السريع — مكرسة بالكامل للدهان والسمكرة. هذا الفصل ليس تفصيلًا تنظيميًا: الغبار عدو الدهان، والدهان لا مكان له قرب أعمال الميكانيكا، وكل فريق يتقن مجاله لأنه لا يفعل سواه."
     : "The first workshop is dedicated to mechanical and electrical maintenance and diagnostics; the second — the Fast Painting workshop — entirely to paint and body. That separation is not an organizational detail: dust is the enemy of paint, paint has no place near mechanical work, and each team masters its craft because it does nothing else."}</p>
   ${ph(ar ? "الصورة قيد التجهيز — فريق ومنشآت QSC" : "PHOTO PENDING — QSC TEAM & FACILITIES", "ph--light")}
+  <p>${ar
+    ? "تمتد منشآت QSC على 4,500 متر مربع ويعمل فيها 400 فني متخصص يخدمون نحو 50 مركبة يوميًا — أرقام على مستوى الشركة نعرضها كما نشرتها QSC. لكن الرقم الذي نقيس به أنفسنا فعلًا مختلف: كم عميلًا غادر وهو يفهم بالضبط ما حدث لسيارته ولماذا. فالسيارة الفاخرة استثمار وعلاقة معًا، والورشة التي تستحقها هي التي تعاملها كذلك — بقطع مطابقة للمواصفات، وقرارات مبنية على القياس لا التخمين، وفاتورة تحكي قصة العمل كاملة."
+    : "QSC's facilities span 4,500 square metres, staffed by 400 expert technicians serving around 50 vehicles daily — company-wide figures, shown as QSC publishes them. But the number we actually measure ourselves by is different: how many customers leave understanding exactly what happened to their car and why. A luxury vehicle is an investment and a relationship at once, and the workshop it deserves treats it as both — with specification-matched parts, decisions built on measurement rather than guesswork, and an invoice that tells the complete story of the work."}</p>
+  <h2 style="margin-top:40px">${ar ? "ما نلتزم به في كل زيارة" : "What we commit to on every visit"}</h2>
+  <hr class="rule">
+  <ul class="checklist" style="margin-top:22px">
+    ${(ar
+      ? ["تشخيص موثق قبل أي توصية — لا قطع تُستبدل على الظن", "نطاق عمل مكتوب وسعر يُعتمد منك قبل البدء", "قطع مطابقة لمواصفات الصانع مع شفافية كاملة في المصدر", "تجربة طريق أو فحص تحقق بعد كل إصلاح", "تقرير حالة يحفظ تاريخ سيارتك ويحمي قيمتها"]
+      : ["Documented diagnosis before any recommendation — no parts replaced on suspicion", "A written scope and price you approve before work begins", "Manufacturer-specification parts with full transparency on sourcing", "A road test or verification check after every repair", "A condition report that preserves your car's history and protects its value"]
+    ).map(x => `<li>${esc(x)}</li>`).join("")}
+  </ul>
+  <h2 style="margin-top:40px">${ar ? "لماذا منشأتان منفصلتان؟" : "Why two separate facilities?"}</h2>
+  <hr class="rule">
+  <p style="margin-top:18px">${ar
+    ? "لأن الجودة تبدأ من البيئة. غرف الدهان تحتاج هواء مرشحًا ورطوبة مضبوطة وعزلًا تامًا عن غبار الصنفرة والمعادن؛ وأعمال الميكانيكا تحتاج رافعات ومعدات قياس ومساحة حركة لا تتوافق مع متطلبات الرش. الورش التي تجمع الاثنين تحت سقف واحد تساوم على أحدهما حتمًا — غالبًا على الدهان. اختارت QSC الطريق الأصعب والأصح: منشأة لكل حرفة، وفريق لكل منشأة، ومعيار واحد يحكم الاثنتين."
+    : "Because quality starts with environment. Paint booths need filtered air, controlled humidity and complete isolation from sanding and metal dust; mechanical work needs lifts, measurement equipment and movement space incompatible with spray operations. Workshops that combine both under one roof inevitably compromise one — usually the paint. QSC chose the harder, correct path: a facility per craft, a team per facility, and one standard governing both."}</p>
 </div></section>
 ${statsStrip(lang)}
 ${processSection(lang)}
+${faqBlock(lang, aboutFaqs)}
 <section class="section"><div class="container center">
   <h2>${ar ? "تعرّف على الورشتين" : "Meet the two workshops"}</h2>
   <div class="actions" style="justify-content:center">
-    <a class="btn btn--dark" href="/${lang}/workshops/maintenance/">${t(workshops.maintenance.shortName, lang)}</a>
-    <a class="btn btn--dark" href="/${lang}/workshops/painting-bodywork/">${t(workshops.painting.shortName, lang)}</a>
-    <a class="btn btn--primary" href="/${lang}/book-appointment/">${t(UI.nav.book, lang)}</a>
+    <a class="btn btn--dark" href="${P(lang, "/workshops/maintenance/")}">${t(workshops.maintenance.shortName, lang)}</a>
+    <a class="btn btn--dark" href="${P(lang, "/workshops/painting-bodywork/")}">${t(workshops.painting.shortName, lang)}</a>
+    <a class="btn btn--primary" href="${P(lang, "/book-appointment/")}">${t(UI.nav.book, lang)}</a>
   </div>
 </div></section>`;
-  return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld: [breadcrumbLd(trail)] }, body, { pageType: "about" });
+  return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld: [breadcrumbLd(trail), faqLd(aboutFaqs)] }, body, { pageType: "about" });
 }
 
 /* ---------- Contact ---------- */
 function contactPage(lang) {
   const ar = lang === "ar";
-  const pathname = `/${lang}/contact/`;
-  const trail = [[`/${lang}/`, t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.contact, lang)]];
+  const pathname = P(lang, "/contact/");
+  const trail = [[P(lang, "/"), t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.contact, lang)]];
   const title = ar ? "اتصل بـ QSC Automotive — الرياض" : "Contact QSC Automotive — Riyadh";
   const desc = ar
-    ? "تواصل مع QSC في الرياض: هاتف وبريد وورشتان — الصيانة والدهان والسمكرة. اختر الورشة الصحيحة لحاجتك واحجز موعدك."
-    : "Reach QSC in Riyadh: phone, email and two workshops — maintenance, and painting & bodywork. Choose the right workshop for your need and book.";
+    ? "تواصل مع QSC في الرياض: هاتف وواتساب وبريد وورشتان — الصيانة والدهان والسمكرة. اختر الورشة الصحيحة لحاجتك واحجز موعدك."
+    : "Reach QSC in Riyadh: phone, WhatsApp, email and two workshops — maintenance, and painting & bodywork. Choose the right workshop for your need and book.";
+  const cFaqs = t(pageFaqs.contact, lang);
   const body = `
 <section class="page-hero"><div class="container">
   <span class="eyebrow">${ar ? "التواصل والمواقع" : "CONTACT & LOCATIONS"}</span>
@@ -827,31 +1005,45 @@ ${breadcrumbs(lang, trail)}
       ${workshopSummaryCard(lang, "maintenance")}
       ${workshopSummaryCard(lang, "painting")}
     </div>
+    <h2 style="margin-top:44px">${ar ? "كيف تختار القناة الأسرع؟" : "Which channel is fastest for what?"}</h2>
+    <div class="prose deep">
+      <p>${ar
+        ? "للمواعيد والاستفسارات العاجلة، الهاتف هو الأسرع: تصل مباشرة إلى فريق الورشة أثناء ساعات العمل ويُحجز موعدك في المكالمة نفسها. أما واتساب فهو القناة المثالية لأي شيء يحتاج صورًا — خدش، صدمة، تسريب، لمبة تحذير على الشاشة — إذ يستطيع الفريق تقييم ما يراه والرد بخطوة تالية واضحة دون زيارة."
+        : "For appointments and urgent questions, the phone is quickest: you reach the workshop team directly during working hours and your appointment is booked in the same call. WhatsApp is the ideal channel for anything that needs photos — a scratch, a dent, a leak, a warning light on the display — because the team can assess what it sees and reply with a clear next step, no visit required."}</p>
+      <p>${ar
+        ? "نموذج الحجز هو الأفضل عندما تريد تنظيم التفاصيل كلها في طلب واحد: السيارة والخدمة والوصف والصور والتاريخ المفضل. وأيًا كانت القناة التي تبدأ بها، ينتهي طلبك عند الفريق نفسه — فريق الورشة المسؤولة عن نوع العمل الذي تحتاجه سيارتك — ويُرد عليك خلال ساعات العمل."
+        : "The booking form is best when you want everything organized in one request: the car, the service, a description, photos and your preferred date. Whichever channel you start with, your request ends up with the same people — the team of the workshop responsible for the kind of work your car needs — and you hear back within working hours."}</p>
+    </div>
   </div>
   <aside class="panel">
     <h3>${ar ? "قنوات التواصل" : "Direct channels"}</h3>
     <ul class="workshop-meta">
-      <li><span class="k">${ar ? "الهاتف" : "Phone"}</span><span><a href="tel:${business.mainPhone}" data-contact="phone" data-workshop="org" dir="ltr">${esc(business.mainPhoneDisplay)}</a></span></li>
+      <li><span class="k">${t(workshops.maintenance.shortName, lang)}</span><span><a href="tel:${workshops.maintenance.phone}" data-contact="phone" data-workshop="maintenance" dir="ltr">${esc(workshops.maintenance.phoneDisplay)}</a></span></li>
+      <li><span class="k">${t(workshops.painting.shortName, lang)}</span><span><a href="tel:${workshops.painting.phone}" data-contact="phone" data-workshop="painting" dir="ltr">${esc(workshops.painting.phoneDisplay)}</a></span></li>
       <li><span class="k">${ar ? "البريد" : "Email"}</span><span><a href="mailto:${business.email}">${business.email}</a></span></li>
-      <li><span class="k">${ar ? "الدوام" : "Hours"}</span><span>${esc(t(business.hoursLegacy, lang))}</span></li>
+      <li><span class="k">${ar ? "الدوام" : "Hours"}</span><span>${esc(t(workshops.maintenance.hours, lang))}</span></li>
     </ul>
-    <a class="btn btn--primary" href="/${lang}/book-appointment/">${t(UI.nav.book, lang)}</a>
-    <a class="btn btn--ghost" data-contact="whatsapp" data-workshop="maintenance" href="#">${t(UI.common.whatsapp, lang)}</a>
-    <p class="contact-line">${esc(t(business.mainPhoneNote, lang))}</p>
+    <a class="btn btn--primary" href="${P(lang, "/book-appointment/")}">${t(UI.nav.book, lang)}</a>
+    <a class="btn btn--ghost" data-contact="whatsapp" data-workshop="maintenance" href="#">${t(UI.common.whatsapp, lang)} — ${t(workshops.maintenance.shortName, lang)}</a>
+    <a class="btn btn--ghost" data-contact="whatsapp" data-workshop="painting" href="#">${t(UI.common.whatsapp, lang)} — ${t(workshops.painting.shortName, lang)}</a>
   </aside>
-</div></section>`;
-  return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld: [breadcrumbLd(trail)] }, body, { pageType: "contact" });
+</div></section>
+${faqBlock(lang, cFaqs, { cloud: true })}
+${contactBand(lang, "contact")}`;
+  return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld: [breadcrumbLd(trail), faqLd(cFaqs)] }, body,
+    { pageType: "contact", extraScripts: `<script src="/assets/js/booking.js" defer></script>` });
 }
 
 /* ---------- Booking ---------- */
 function bookingPage(lang) {
   const ar = lang === "ar";
-  const pathname = `/${lang}/book-appointment/`;
-  const trail = [[`/${lang}/`, t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.book, lang)]];
+  const pathname = P(lang, "/book-appointment/");
+  const trail = [[P(lang, "/"), t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.book, lang)]];
   const title = ar ? "احجز موعدًا — QSC Automotive الرياض" : "Book an Appointment — QSC Automotive Riyadh";
   const desc = ar
     ? "اطلب موعدًا في ورشة QSC المناسبة: اختر الورشة والخدمة وسيارتك، أو تواصل مباشرة بالهاتف أو واتساب."
     : "Request an appointment at the right QSC workshop: choose the workshop, service and your vehicle, or reach the team directly by phone or WhatsApp.";
+  const bFaqs = t(pageFaqs.booking, lang);
   const svcOptions = (branch) => services.filter(s => s.branch === branch)
     .map(s => `<option value="${s.slug}">${esc(t(s.name, lang))}</option>`).join("");
   const body = `
@@ -865,7 +1057,7 @@ function bookingPage(lang) {
 ${breadcrumbs(lang, trail)}
 <section class="section section--tight"><div class="container split">
   <div>
-    <form id="booking-form" novalidate>
+    <form class="qsc-form" data-form="full" novalidate>
       <div class="form-grid">
         <div class="field">
           <label for="bf-name">${ar ? "الاسم الكامل" : "Full name"} *</label>
@@ -935,19 +1127,29 @@ ${breadcrumbs(lang, trail)}
         <input type="checkbox" name="consent" required>
         <span>${ar
           ? "أوافق على تواصل QSC معي بخصوص هذا الطلب وعلى معالجة بياناتي وفق سياسة الخصوصية."
-          : "I agree to be contacted by QSC about this request and to my details being handled per the privacy policy."} <a href="/${lang}/privacy-policy/">${t(UI.nav.privacy, lang)}</a></span>
+          : "I agree to be contacted by QSC about this request and to my details being handled per the privacy policy."} <a href="${P(lang, "/privacy-policy/")}">${t(UI.nav.privacy, lang)}</a></span>
       </label>
       <span class="error-msg"></span>
       <div class="actions">
         <button type="submit" class="btn btn--primary">${ar ? "إرسال طلب الموعد" : "Send appointment request"}</button>
       </div>
-      <div id="form-status" class="form-status" aria-live="polite"></div>
+      <div class="form-status" aria-live="polite"></div>
     </form>
+    <h2 style="margin-top:48px">${ar ? "ماذا تجهّز قبل الطلب؟" : "What to have ready before you book"}</h2>
+    <div class="prose deep">
+      <p>${ar
+        ? "كلما كان طلبك أدق كان الموعد أنفع. للصيانة: صف العرض بثلاثة عناصر — متى يحدث (تشغيل بارد، سرعة معينة، انعطاف)، وماذا تلاحظ (صوت، اهتزاز، رائحة، رسالة على الشاشة)، ومتى بدأ. وإن استطعت تسجيل مقطع قصير للصوت فهو يختصر على الفني نصف الطريق. وللدهان والسمكرة: صور واضحة في ضوء النهار — الجزء كاملًا من مسافة خطوة، والضرر مواجهة وبزاوية — تكفي لتقييم مبدئي قبل أي زيارة."
+        : "The more precise your request, the more useful the appointment. For maintenance: describe the symptom in three parts — when it happens (cold start, a certain speed, turning), what you notice (sound, vibration, smell, a message on the display), and when it started. A short video of the noise saves the technician half the journey. For painting & bodywork: clear daylight photos — the whole panel from a step back, the damage straight-on and at an angle — are enough for an initial assessment before any visit."}</p>
+      <p>${ar
+        ? "أضف رقم الهيكل (VIN) إن تيسر — تجده أسفل الزجاج الأمامي أو في استمارة السيارة — فهو يتيح للورشة تجهيز القطع والإجراءات الصحيحة لطرازك بالضبط قبل وصولك. وتذكّر أن الطلب ليس التزامًا: الفحص أولًا، ثم النطاق والسعر لموافقتك، ثم العمل."
+        : "Add the VIN if convenient — found at the base of the windscreen or in the registration card — as it lets the workshop prepare the exact parts and procedures for your specific model before you arrive. And remember the request commits you to nothing: assessment first, then scope and price for your approval, then the work."}</p>
+    </div>
   </div>
   <aside class="panel">
     <h3>${ar ? "تفضل التواصل المباشر؟" : "Prefer to talk directly?"}</h3>
     <p class="contact-line">${ar ? "الهاتف وواتساب يصلانك بالفريق مباشرة أثناء ساعات العمل." : "Phone and WhatsApp reach the team directly during working hours."}</p>
-    <a class="btn btn--dark" data-contact="phone" data-workshop="org" href="tel:${business.mainPhone}">${t(UI.common.callUs, lang)} <span dir="ltr">${esc(business.mainPhoneDisplay)}</span></a>
+    <a class="btn btn--dark" data-contact="phone" data-workshop="maintenance" href="tel:${workshops.maintenance.phone}">${t(UI.common.callUs, lang)} — ${t(workshops.maintenance.shortName, lang)}</a>
+    <a class="btn btn--dark" data-contact="phone" data-workshop="painting" href="tel:${workshops.painting.phone}">${t(UI.common.callUs, lang)} — ${t(workshops.painting.shortName, lang)}</a>
     <a class="btn btn--ghost" data-contact="whatsapp" data-workshop="maintenance" href="#">${t(UI.common.whatsapp, lang)} — ${t(workshops.maintenance.shortName, lang)}</a>
     <a class="btn btn--ghost" data-contact="whatsapp" data-workshop="painting" href="#">${t(UI.common.whatsapp, lang)} — ${t(workshops.painting.shortName, lang)}</a>
     <h3 style="margin-top:28px">${ar ? "ماذا بعد الإرسال؟" : "What happens next?"}</h3>
@@ -955,16 +1157,17 @@ ${breadcrumbs(lang, trail)}
       ${t(UI.common.process, lang).map(([h]) => `<div class="step"><p style="margin:0">${esc(h)}</p></div>`).join("")}
     </div>
   </aside>
-</div></section>`;
-  return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld: [breadcrumbLd(trail)] }, body,
+</div></section>
+${faqBlock(lang, bFaqs, { cloud: true })}`;
+  return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld: [breadcrumbLd(trail), faqLd(bFaqs)] }, body,
     { pageType: "booking", extraScripts: `<script src="/assets/js/booking.js" defer></script>` });
 }
 
-/* ---------- Guides & Projects hubs (launch state: templates live, entries pending) ---------- */
+/* ---------- Guides & Projects hubs ---------- */
 function guidesHub(lang) {
   const ar = lang === "ar";
-  const pathname = `/${lang}/guides/`;
-  const trail = [[`/${lang}/`, t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.guides, lang)]];
+  const pathname = P(lang, "/guides/");
+  const trail = [[P(lang, "/"), t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.guides, lang)]];
   const body = `
 <section class="page-hero"><div class="container">
   <span class="eyebrow">${ar ? "أدلة ومعلومات" : "GUIDES & INSIGHTS"}</span>
@@ -989,8 +1192,8 @@ ${breadcrumbs(lang, trail)}
 
 function projectsHub(lang) {
   const ar = lang === "ar";
-  const pathname = `/${lang}/projects/`;
-  const trail = [[`/${lang}/`, t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.projects, lang)]];
+  const pathname = P(lang, "/projects/");
+  const trail = [[P(lang, "/"), t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.projects, lang)]];
   const body = `
 <section class="page-hero"><div class="container">
   <span class="eyebrow">${ar ? "أعمالنا" : "OUR WORK"}</span>
@@ -1005,7 +1208,7 @@ ${breadcrumbs(lang, trail)}
     ? "جاري توثيق أول مجموعة مشاريع مع عملائنا. حتى نشرها يمكنك طلب أمثلة ذات صلة بحالتك عند التقييم."
     : "The first set of projects is being documented with our customers. Until they are published, you can ask to see relevant examples during your assessment."}</div>
   <div class="grid grid--3">
-    ${[1, 2, 3].map(i => `<div class="card">${ph(ar ? "مشروع قيد التوثيق" : "PROJECT PENDING — REAL BEFORE/AFTER", "ph--light")}<p style="margin-top:14px">${ar ? "يُنشر بعد اكتمال التوثيق والموافقة." : "Published once documentation and consent are complete."}</p></div>`).join("")}
+    ${[1, 2, 3].map(() => `<div class="card">${ph(ar ? "مشروع قيد التوثيق" : "PROJECT PENDING — REAL BEFORE/AFTER", "ph--light")}<p style="margin-top:14px">${ar ? "يُنشر بعد اكتمال التوثيق والموافقة." : "Published once documentation and consent are complete."}</p></div>`).join("")}
   </div>
 </div></section>`;
   return page(lang, {
@@ -1018,8 +1221,8 @@ ${breadcrumbs(lang, trail)}
 /* ---------- Privacy ---------- */
 function privacyPage(lang) {
   const ar = lang === "ar";
-  const pathname = `/${lang}/privacy-policy/`;
-  const trail = [[`/${lang}/`, t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.privacy, lang)]];
+  const pathname = P(lang, "/privacy-policy/");
+  const trail = [[P(lang, "/"), t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.privacy, lang)]];
   const body = `
 <section class="page-hero"><div class="container">
   <h1>${ar ? "سياسة الخصوصية" : "Privacy Policy"}</h1>
@@ -1071,8 +1274,8 @@ function notFoundPage() {
     <h1>Page not found<br><span lang="ar" dir="rtl">الصفحة غير موجودة</span></h1>
     <p class="sub">The page you were looking for does not exist or has moved.<br><span lang="ar" dir="rtl">الصفحة التي تبحث عنها غير موجودة أو تم نقلها.</span></p>
     <nav class="gateway-choices">
+      <a class="gateway-choice" href="/"><strong>English</strong><span>Go to homepage</span></a>
       <a class="gateway-choice" href="/ar/" lang="ar" dir="rtl"><strong>العربية</strong><span>الصفحة الرئيسية</span></a>
-      <a class="gateway-choice" href="/en/"><strong>English</strong><span>Go to homepage</span></a>
     </nav>
   </div>
 </main>
@@ -1097,62 +1300,59 @@ for (const f of ["site-config.js", "main.js", "booking.js"]) {
 fs.copyFileSync(path.join(__dirname, "public/assets/logo/qsc-logo.jpg"), path.join(DIST, "assets/logo/qsc-logo.jpg"));
 
 /* pages */
-writePage("/index.html", gatewayPage());
 writePage("/404.html", notFoundPage());
 
-const indexable = []; // [path, langPairs]
+const indexable = [];
 for (const lang of LANGS) {
-  writePage(`/${lang}/`, homePage(lang)); indexable.push(`/${lang}/`);
+  writePage(P(lang, "/"), homePage(lang)); indexable.push(P(lang, "/"));
   for (const branch of ["maintenance", "painting"]) {
-    writePage(`/${lang}/${pillarSlug(branch)}/`, pillarPage(lang, branch));
-    indexable.push(`/${lang}/${pillarSlug(branch)}/`);
+    writePage(P(lang, `/${pillarSlug(branch)}/`), pillarPage(lang, branch));
+    indexable.push(P(lang, `/${pillarSlug(branch)}/`));
   }
   for (const s of services) {
     writePage(serviceUrl(lang, s), servicePage(lang, s));
     indexable.push(serviceUrl(lang, s));
   }
-  writePage(`/${lang}/car-brands/`, brandsHub(lang)); indexable.push(`/${lang}/car-brands/`);
+  writePage(P(lang, "/car-brands/"), brandsHub(lang)); indexable.push(P(lang, "/car-brands/"));
   for (const b of brands) {
-    writePage(`/${lang}/car-brands/${b.slug}/`, brandPage(lang, b));
-    indexable.push(`/${lang}/car-brands/${b.slug}/`);
+    writePage(P(lang, `/car-brands/${b.slug}/`), brandPage(lang, b));
+    indexable.push(P(lang, `/car-brands/${b.slug}/`));
   }
-  writePage(`/${lang}/workshops/`, workshopsHub(lang)); indexable.push(`/${lang}/workshops/`);
-  writePage(`/${lang}/workshops/maintenance/`, workshopPage(lang, "maintenance")); indexable.push(`/${lang}/workshops/maintenance/`);
-  writePage(`/${lang}/workshops/painting-bodywork/`, workshopPage(lang, "painting")); indexable.push(`/${lang}/workshops/painting-bodywork/`);
-  writePage(`/${lang}/service-areas/`, serviceAreasHub(lang)); indexable.push(`/${lang}/service-areas/`);
-  writePage(`/${lang}/service-areas/riyadh/`, riyadhPage(lang)); indexable.push(`/${lang}/service-areas/riyadh/`);
-  writePage(`/${lang}/about/`, aboutPage(lang)); indexable.push(`/${lang}/about/`);
-  writePage(`/${lang}/contact/`, contactPage(lang)); indexable.push(`/${lang}/contact/`);
-  writePage(`/${lang}/book-appointment/`, bookingPage(lang)); indexable.push(`/${lang}/book-appointment/`);
-  // Templates live but noindex until real entries are approved — excluded from sitemap:
-  writePage(`/${lang}/guides/`, guidesHub(lang));
-  writePage(`/${lang}/projects/`, projectsHub(lang));
-  writePage(`/${lang}/privacy-policy/`, privacyPage(lang));
+  writePage(P(lang, "/workshops/"), workshopsHub(lang)); indexable.push(P(lang, "/workshops/"));
+  writePage(P(lang, "/workshops/maintenance/"), workshopPage(lang, "maintenance")); indexable.push(P(lang, "/workshops/maintenance/"));
+  writePage(P(lang, "/workshops/painting-bodywork/"), workshopPage(lang, "painting")); indexable.push(P(lang, "/workshops/painting-bodywork/"));
+  writePage(P(lang, "/service-areas/"), serviceAreasHub(lang)); indexable.push(P(lang, "/service-areas/"));
+  writePage(P(lang, "/service-areas/riyadh/"), riyadhPage(lang)); indexable.push(P(lang, "/service-areas/riyadh/"));
+  writePage(P(lang, "/about/"), aboutPage(lang)); indexable.push(P(lang, "/about/"));
+  writePage(P(lang, "/contact/"), contactPage(lang)); indexable.push(P(lang, "/contact/"));
+  writePage(P(lang, "/book-appointment/"), bookingPage(lang)); indexable.push(P(lang, "/book-appointment/"));
+  writePage(P(lang, "/guides/"), guidesHub(lang));
+  writePage(P(lang, "/projects/"), projectsHub(lang));
+  writePage(P(lang, "/privacy-policy/"), privacyPage(lang));
 }
 
-/* sitemap.xml — indexable canonical pages only, with hreflang alternates */
+/* sitemap.xml */
 const today = new Date().toISOString().slice(0, 10);
-const enPages = indexable.filter(p => p.startsWith("/en/"));
+const enPages = indexable.filter(p => !p.startsWith("/ar"));
 const smUrl = (p) => {
-  const arP = p.replace("/en/", "/ar/");
+  const arP = "/ar" + p;
   return `  <url>
     <loc>${SITE}${p}</loc>
     <lastmod>${today}</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="${SITE}${p}"/>
     <xhtml:link rel="alternate" hreflang="ar" href="${SITE}${arP}"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}${p}"/>
   </url>
   <url>
     <loc>${SITE}${arP}</loc>
     <lastmod>${today}</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="${SITE}${p}"/>
     <xhtml:link rel="alternate" hreflang="ar" href="${SITE}${arP}"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}${p}"/>
   </url>`;
 };
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  <url><loc>${SITE}/</loc><lastmod>${today}</lastmod></url>
 ${enPages.map(smUrl).join("\n")}
 </urlset>
 `;
@@ -1165,4 +1365,4 @@ Sitemap: ${SITE}/sitemap.xml
 `);
 
 console.log(`Built ${written.length} HTML documents + sitemap.xml + robots.txt into dist/`);
-console.log(`Indexable pages in sitemap: ${enPages.length * 2 + 1}`);
+console.log(`Indexable pages in sitemap: ${enPages.length * 2}`);

@@ -7,9 +7,9 @@
 <meta name="description" content="اطلب موعدًا في ورشة QSC المناسبة: اختر الورشة والخدمة وسيارتك، أو تواصل مباشرة بالهاتف أو واتساب.">
 
 <link rel="canonical" href="https://qscco.sa/ar/book-appointment/">
+<link rel="alternate" hreflang="en" href="https://qscco.sa/book-appointment/">
 <link rel="alternate" hreflang="ar" href="https://qscco.sa/ar/book-appointment/">
-<link rel="alternate" hreflang="en" href="https://qscco.sa/en/book-appointment/">
-<link rel="alternate" hreflang="x-default" href="https://qscco.sa/">
+<link rel="alternate" hreflang="x-default" href="https://qscco.sa/book-appointment/">
 <meta property="og:title" content="احجز موعدًا — QSC Automotive الرياض">
 <meta property="og:description" content="اطلب موعدًا في ورشة QSC المناسبة: اختر الورشة والخدمة وسيارتك، أو تواصل مباشرة بالهاتف أو واتساب.">
 <meta property="og:type" content="website">
@@ -22,13 +22,17 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap">
 <link rel="stylesheet" href="/assets/css/main.css">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"الرئيسية","item":"https://qscco.sa/ar/"},{"@type":"ListItem","position":2,"name":"احجز موعدًا"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"هل إرسال النموذج حجز مؤكد؟","acceptedAnswer":{"@type":"Answer","text":"لا — هو طلب موعد. يراجع فريق الورشة بياناتك ويتواصل لتأكيد التاريخ والوقت. ولاحتياجات اليوم نفسه الاتصال أسرع طريق."}},{"@type":"Question","name":"ماذا يحدث للصور التي أرفعها؟","acceptedAnswer":{"@type":"Answer","text":"يستخدمها فريق الورشة لتقييم حالتك ولا شيء غير ذلك. ولا تُنشر صور سيارتك أو تُشارك دون موافقتك الموثقة — راجع سياسة الخصوصية."}},{"@type":"Question","name":"لا أعرف أي خدمة أختار في النموذج.","acceptedAnswer":{"@type":"Answer","text":"اختر الأقرب وصف الأعراض في خانة الرسالة — يطابق الفريق وصفك مع الخدمة الصحيحة. واختيار الورشة (صيانة أم دهان) هو الأهم."}}]}</script>
 </head>
 <body data-page-type="booking">
 
 <a class="skip-link" href="#main">تخطّ إلى المحتوى الرئيسي</a>
 <div class="topbar"><div class="container">
   <span>ورشتان متخصصتان في الرياض — صيانة · دهان وسمكرة</span>
-  <a href="tel:+966599902555" data-contact="phone" data-workshop="org" dir="ltr">+966 59 990 2555</a>
+  <span class="tb-links">
+    <a href="tel:+966599902555" data-contact="phone" data-workshop="maintenance" dir="ltr">+966 59 990 2555</a>
+    <a href="tel:+966508181801" data-contact="phone" data-workshop="painting" dir="ltr">+966 50 818 1801</a>
+  </span>
 </div></div>
 <header class="site-header"><div class="container">
   <a class="brand" href="/ar/" aria-label="QSC Automotive — الرئيسية">
@@ -43,7 +47,7 @@
     <a href="/ar/workshops/">ورشنا</a>
     <a href="/ar/about/">من نحن</a>
     <a href="/ar/contact/">اتصل بنا</a>
-    <a class="lang-switch" href="/en/book-appointment/" lang="en" aria-label="View this page in English">English</a>
+    <a class="lang-switch" href="/book-appointment/" lang="en" aria-label="View this page in English">English</a>
     <a class="btn btn--primary nav-cta" href="/ar/book-appointment/">احجز موعدًا</a>
   </nav>
 </div></header>
@@ -57,7 +61,7 @@
 <nav class="breadcrumbs" aria-label="مسار التنقل"><div class="container"><ol><li><a href="/ar/">الرئيسية</a></li><li aria-current="page">احجز موعدًا</li></ol></div></nav>
 <section class="section section--tight"><div class="container split">
   <div>
-    <form id="booking-form" novalidate>
+    <form class="qsc-form" data-form="full" novalidate>
       <div class="form-grid">
         <div class="field">
           <label for="bf-name">الاسم الكامل *</label>
@@ -131,13 +135,19 @@
       <div class="actions">
         <button type="submit" class="btn btn--primary">إرسال طلب الموعد</button>
       </div>
-      <div id="form-status" class="form-status" aria-live="polite"></div>
+      <div class="form-status" aria-live="polite"></div>
     </form>
+    <h2 style="margin-top:48px">ماذا تجهّز قبل الطلب؟</h2>
+    <div class="prose deep">
+      <p>كلما كان طلبك أدق كان الموعد أنفع. للصيانة: صف العرض بثلاثة عناصر — متى يحدث (تشغيل بارد، سرعة معينة، انعطاف)، وماذا تلاحظ (صوت، اهتزاز، رائحة، رسالة على الشاشة)، ومتى بدأ. وإن استطعت تسجيل مقطع قصير للصوت فهو يختصر على الفني نصف الطريق. وللدهان والسمكرة: صور واضحة في ضوء النهار — الجزء كاملًا من مسافة خطوة، والضرر مواجهة وبزاوية — تكفي لتقييم مبدئي قبل أي زيارة.</p>
+      <p>أضف رقم الهيكل (VIN) إن تيسر — تجده أسفل الزجاج الأمامي أو في استمارة السيارة — فهو يتيح للورشة تجهيز القطع والإجراءات الصحيحة لطرازك بالضبط قبل وصولك. وتذكّر أن الطلب ليس التزامًا: الفحص أولًا، ثم النطاق والسعر لموافقتك، ثم العمل.</p>
+    </div>
   </div>
   <aside class="panel">
     <h3>تفضل التواصل المباشر؟</h3>
     <p class="contact-line">الهاتف وواتساب يصلانك بالفريق مباشرة أثناء ساعات العمل.</p>
-    <a class="btn btn--dark" data-contact="phone" data-workshop="org" href="tel:+966599902555">اتصال <span dir="ltr">+966 59 990 2555</span></a>
+    <a class="btn btn--dark" data-contact="phone" data-workshop="maintenance" href="tel:+966599902555">اتصال — الصيانة</a>
+    <a class="btn btn--dark" data-contact="phone" data-workshop="painting" href="tel:+966508181801">اتصال — الدهان والسمكرة</a>
     <a class="btn btn--ghost" data-contact="whatsapp" data-workshop="maintenance" href="#">واتساب — الصيانة</a>
     <a class="btn btn--ghost" data-contact="whatsapp" data-workshop="painting" href="#">واتساب — الدهان والسمكرة</a>
     <h3 style="margin-top:28px">ماذا بعد الإرسال؟</h3>
@@ -146,6 +156,11 @@
     </div>
   </aside>
 </div></section>
+<section class="section section--tight section--cloud"><div class="container">
+  <span class="eyebrow">FAQ</span>
+  <h2>الأسئلة الشائعة</h2>
+  <div class="faq prose"><details><summary>هل إرسال النموذج حجز مؤكد؟</summary><p>لا — هو طلب موعد. يراجع فريق الورشة بياناتك ويتواصل لتأكيد التاريخ والوقت. ولاحتياجات اليوم نفسه الاتصال أسرع طريق.</p></details><details><summary>ماذا يحدث للصور التي أرفعها؟</summary><p>يستخدمها فريق الورشة لتقييم حالتك ولا شيء غير ذلك. ولا تُنشر صور سيارتك أو تُشارك دون موافقتك الموثقة — راجع سياسة الخصوصية.</p></details><details><summary>لا أعرف أي خدمة أختار في النموذج.</summary><p>اختر الأقرب وصف الأعراض في خانة الرسالة — يطابق الفريق وصفك مع الخدمة الصحيحة. واختيار الورشة (صيانة أم دهان) هو الأهم.</p></details></div>
+</div></section>
 </main>
 
 <footer class="site-footer"><div class="container">
@@ -153,7 +168,7 @@
     <div class="footer-brand">
       <img src="/assets/logo/qsc-logo.jpg" alt="QSC Automotive" width="128" height="80">
       <p>QSC Automotive — ورشتان متخصصتان في الرياض للسيارات الفاخرة وعالية الأداء: صيانة متخصصة، ودهان وسمكرة متخصصان.</p>
-      <p dir="ltr"><a href="tel:+966599902555" data-contact="phone" data-workshop="org">+966 59 990 2555</a></p>
+      <p dir="ltr"><a href="tel:+966599902555" data-contact="phone" data-workshop="maintenance">+966 59 990 2555</a></p>
       <p><a href="mailto:info@qscco.sa">info@qscco.sa</a></p>
     </div>
     <div><h3>استكشف</h3>
@@ -183,7 +198,7 @@
   </div>
 </div></footer>
 <div class="sticky-cta" aria-hidden="false">
-  <a href="tel:+966599902555" data-contact="phone" data-workshop="org">اتصال QSC</a>
+  <a href="tel:+966599902555" data-contact="phone" data-workshop="maintenance">اتصال QSC</a>
   <a class="primary" href="/ar/book-appointment/">احجز موعدًا</a>
 </div>
 <script src="/assets/js/site-config.js"></script>

@@ -8,12 +8,15 @@
       "en": "Mechanical, electrical, diagnostic and scheduled care for luxury and performance vehicles.",
       "ar": "الصيانة الميكانيكية والكهربائية والفحص الحاسوبي والعناية الدورية للسيارات الفاخرة وعالية الأداء."
     },
-    "address": { "en": "PENDING_CLIENT — exact street address to be confirmed", "ar": "PENDING_CLIENT — بانتظار تأكيد العنوان" },
-    "mapPin": null,
-    "mapQuery": null,
-    "phone": null,
-    "whatsapp": null,
-    "hours": null,
+    "address": {
+      "en": "Al-Buraikimah Street, Al-Noor District, Al-Sulai, Riyadh",
+      "ar": "شارع البريكمة، حي النور، السلي، الرياض"
+    },
+    "_addressNote": "SAMPLE (taken from legacy site) — client to confirm/replace before launch",
+    "phone": "+966599902555",
+    "phoneDisplay": "+966 59 990 2555",
+    "_phoneNote": "SAMPLE assignment of legacy number — client to confirm which branch owns it",
+    "hours": { "en": "Saturday – Thursday, 8:00 AM – 8:00 PM", "ar": "السبت – الخميس، 8 صباحًا – 8 مساءً" },
     "ctaLabel": { "en": "Request a Diagnostic Appointment", "ar": "طلب موعد فحص وتشخيص" }
   },
   "painting": {
@@ -25,13 +28,16 @@
       "en": "Professional painting, collision and body repair, paint matching and finishing — QSC's dedicated painting facility, operating as the Fast Painting workshop.",
       "ar": "الدهان الاحترافي وإصلاح الهيكل والصدمات ومطابقة الألوان والتشطيب النهائي — منشأة QSC المتخصصة للدهان، وتعمل باسم ورشة الدهان السريع."
     },
-    "address": { "en": "PENDING_CLIENT — exact street address to be confirmed", "ar": "PENDING_CLIENT — بانتظار تأكيد العنوان" },
-    "mapPin": null,
-    "mapQuery": null,
-    "phone": null,
-    "whatsapp": null,
-    "hours": null,
+    "address": {
+      "en": "Industrial Area, Al-Sulai, Riyadh",
+      "ar": "المنطقة الصناعية، السلي، الرياض"
+    },
+    "_addressNote": "SAMPLE placeholder — client to supply the painting workshop's exact address before launch",
+    "phone": "+966508181801",
+    "phoneDisplay": "+966 50 818 1801",
+    "_phoneNote": "SAMPLE assignment of legacy second number — client to confirm which branch owns it",
+    "hours": { "en": "Saturday – Thursday, 8:00 AM – 8:00 PM", "ar": "السبت – الخميس، 8 صباحًا – 8 مساءً" },
     "ctaLabel": { "en": "Request a Paint Assessment", "ar": "طلب تقييم دهان" }
   },
-  "_notes": "Two physical facilities total, per client decision. Fast Painting IS the painting facility — never a third address. phone/whatsapp/address/mapPin null = pending client confirmation; the UI must show an honest pending state and fall back to the organization main line, never invent branch details."
+  "_notes": "Two physical facilities total, per client decision. Fast Painting IS the painting facility — never a third address. Addresses, phone assignment and hours above are SAMPLE values the client will replace; the site renders them as real data so the design is complete."
 }

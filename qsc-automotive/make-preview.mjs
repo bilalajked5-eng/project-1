@@ -61,8 +61,8 @@ const shell = `<!doctype html>
 <body>
 <div class="bar">
   <strong>QSC PREVIEW</strong>
-  <button onclick="go('/')">⌂ Gateway</button>
-  <button class="alt" onclick="go('/en/')">EN Home</button>
+  <button onclick="go('/')">⌂ Home (EN)</button>
+  
   <button class="alt" onclick="go('/ar/')">AR الرئيسية</button>
   <button class="alt" onclick="history.length&&back()">← Back</button>
   <span class="route" id="route">/</span>
