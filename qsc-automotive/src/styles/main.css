@@ -226,8 +226,9 @@ html[lang="ar"] .eyebrow { letter-spacing: 0.08em; }
 .card-tag {
   align-self: flex-start; font-size: var(--fs-tiny); font-weight: 800;
   letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--slate); background: var(--cloud);
-  border: 1px solid var(--border); padding: 4px 10px; border-radius: 999px; margin-bottom: 12px;
+  color: #fff; background: linear-gradient(135deg, var(--ink-navy) 0%, var(--qsc-blue) 100%);
+  border: 0; padding: 5px 12px; border-radius: 999px; margin-bottom: 12px;
+  box-shadow: 0 6px 14px -6px rgba(15, 39, 64, 0.45);
 }
 html[lang="ar"] .card-tag { letter-spacing: 0.02em; }
 
