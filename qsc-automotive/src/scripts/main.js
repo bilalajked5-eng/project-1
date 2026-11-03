@@ -123,3 +123,17 @@
     });
   });
 })();
+
+/* ---------- Hero background slideshow ---------- */
+(function () {
+  "use strict";
+  var slides = document.querySelectorAll(".hero-slides .hero-slide");
+  if (slides.length < 2) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  var i = 0;
+  setInterval(function () {
+    slides[i].classList.remove("active");
+    i = (i + 1) % slides.length;
+    slides[i].classList.add("active");
+  }, 7000);
+})();

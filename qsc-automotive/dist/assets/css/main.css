@@ -489,3 +489,97 @@ html[lang="ar"] .site-footer h3 { letter-spacing: 0.02em; }
 /* Topbar refinement */
 .topbar { border-bottom: 1px solid rgba(255,255,255,0.06); }
 .topbar .tb-links { display: flex; gap: 18px; }
+
+/* ============================================================
+   V3 — Real imagery, cinematic hero slideshow, brand logo marquee
+   ============================================================ */
+
+/* Hero slideshow background with navy gradient overlay (per approved design) */
+.hero { background: #071637; }
+.hero-slides { position: absolute; inset: 0; z-index: 0; }
+.hero-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.2s ease; }
+.hero-slide.active { opacity: 1; }
+.hero-slide img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.08); }
+.hero-slide.active img { animation: kenburns 9s ease-out forwards; }
+@keyframes kenburns { from { transform: scale(1.12); } to { transform: scale(1.0); } }
+.hero::before {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(7,22,55,0.96) 0%, rgba(7,22,55,0.84) 38%, rgba(7,22,55,0.45) 70%, rgba(7,22,55,0.25) 100%),
+    linear-gradient(0deg, rgba(10,15,29,0.85), transparent 40%);
+}
+[dir="rtl"] .hero::before {
+  background:
+    linear-gradient(270deg, rgba(7,22,55,0.96) 0%, rgba(7,22,55,0.84) 38%, rgba(7,22,55,0.45) 70%, rgba(7,22,55,0.25) 100%),
+    linear-gradient(0deg, rgba(10,15,29,0.85), transparent 40%);
+}
+.hero::after { z-index: 1; }
+.hero .container { position: relative; z-index: 2; }
+@media (prefers-reduced-motion: reduce) { .hero-slide.active img { animation: none; } }
+
+/* Inner page hero: same image + gradient treatment */
+.page-hero { position: relative; overflow: hidden; background: #071637; }
+.page-hero .ph-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-size: cover; background-position: center;
+}
+.page-hero::before {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(90deg, rgba(7,22,55,0.97) 0%, rgba(7,22,55,0.88) 45%, rgba(7,22,55,0.55) 100%),
+              linear-gradient(0deg, rgba(10,15,29,0.75), transparent 50%);
+}
+[dir="rtl"] .page-hero::before {
+  background: linear-gradient(270deg, rgba(7,22,55,0.97) 0%, rgba(7,22,55,0.88) 45%, rgba(7,22,55,0.55) 100%),
+              linear-gradient(0deg, rgba(10,15,29,0.75), transparent 50%);
+}
+.page-hero .container { position: relative; z-index: 2; }
+
+/* Real photo media blocks (replace placeholders where real imagery exists) */
+.media { position: relative; border-radius: var(--radius-lg); overflow: hidden; background: #0d1822; }
+.media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.media--ratio { aspect-ratio: 16 / 9; }
+.media--tall { aspect-ratio: 4 / 3; }
+.choice-media .media, .choice-media img { height: 100%; }
+.workshop-card .media { aspect-ratio: 16 / 8; border-radius: 0; }
+
+/* Brand logo marquee (per approved design: navy band, white cards, infinite scroll) */
+.marquee {
+  overflow: hidden; padding: 34px 0; background: var(--night-navy);
+  border-top: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.08);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.marquee-track { display: flex; width: max-content; animation: marquee 45s linear infinite; will-change: transform; direction: ltr; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+.marquee-track a {
+  flex: none; margin-right: 22px; width: 150px; height: 92px; border-radius: 16px;
+  background: #fff; display: flex; align-items: center; justify-content: center;
+  padding: 14px 20px; box-shadow: 0 10px 30px -12px rgba(0,0,0,0.5);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.marquee-track a:hover { transform: translateY(-4px) scale(1.04); box-shadow: 0 18px 40px -14px rgba(0,0,0,0.6); }
+.marquee-track img { max-width: 100%; max-height: 60px; width: auto; height: auto; object-fit: contain; }
+.logo-fallback { font-weight: 800; color: var(--night-navy); font-size: 1rem; letter-spacing: 0.04em; text-align: center; line-height: 1.1; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .marquee-track { animation-duration: 90s; } }
+@media (max-width: 760px) {
+  .marquee-track a { width: 116px; height: 72px; margin-right: 14px; padding: 10px 14px; }
+  .marquee-track img { max-height: 46px; }
+}
+
+/* Brand hub cards with logos */
+.brand-card-logo {
+  width: 92px; height: 64px; border: 1px solid var(--border); border-radius: 12px;
+  background: #fff; display: flex; align-items: center; justify-content: center;
+  padding: 8px 12px; margin-bottom: 14px;
+}
+.brand-card-logo img { max-width: 100%; max-height: 44px; width: auto; height: auto; object-fit: contain; }
+.brand-card-logo .logo-fallback { font-size: 0.85rem; }
+
+/* Brand page hero logo chip */
+.brand-hero-logo {
+  width: 120px; height: 80px; background: #fff; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center; padding: 10px 16px; margin-bottom: 22px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+}
+.brand-hero-logo img { max-width: 100%; max-height: 54px; width: auto; height: auto; object-fit: contain; }

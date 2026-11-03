@@ -15,6 +15,7 @@ import extraPaint from "./src/content/services-extra-painting.mjs";
 import pageFaqs from "./src/content/page-faqs.mjs";
 import brands from "./src/content/brands.mjs";
 import brandsExtra from "./src/content/brands-extra.mjs";
+import { IMG_BASE, LOGO_BASE, IMAGES, BRAND_LOGOS } from "./src/data/images.mjs";
 import UI from "./src/content/ui.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -187,6 +188,19 @@ function breadcrumbLd(trail) {
 }
 
 const ph = (label, cls = "") => `<div class="ph ${cls}" role="img" aria-label="${esc(label)}"><span>${esc(label)}</span></div>`;
+const img = (file, alt, cls = "media--ratio") => `<div class="media ${cls}"><img src="${IMG_BASE}${file}" alt="${esc(alt)}" loading="lazy" decoding="async"></div>`;
+const logoImg = (slug, name, lazy = true) => {
+  const l = BRAND_LOGOS[slug];
+  if (!l) return `<span class="logo-fallback">${esc(name)}</span>`;
+  return `<img src="${LOGO_BASE}${l.file}.png" alt="${esc(name)} logo"${lazy ? ' loading="lazy"' : ""} decoding="async" data-fb="${esc(l.mono)}" onerror="this.outerHTML='<span class=&quot;logo-fallback&quot;>'+this.dataset.fb+'</span>'">`;
+};
+const pageHeroBg = () => `<div class="ph-bg" style="background-image:url('${IMG_BASE}${IMAGES.pageHero}')" aria-hidden="true"></div>`;
+function brandMarquee(lang) {
+  const item = (b, hide) => `<a href="${P(lang, `/car-brands/${b.slug}/`)}"${hide ? ' tabindex="-1" aria-hidden="true"' : ""} title="${esc(t(b.name, lang))}">${logoImg(b.slug, t(b.name, "en"))}</a>`;
+  return `<div class="marquee" aria-label="${lang === "ar" ? "العلامات التي نخدمها" : "Brands we service"}">
+  <div class="marquee-track">${brands.map(b => item(b, false)).join("")}${brands.map(b => item(b, true)).join("")}</div>
+</div>`;
+}
 
 function faqBlock(lang, faqs, { cloud = false, title = null } = {}) {
   if (!faqs || !faqs.length) return "";
@@ -216,7 +230,7 @@ function workshopSummaryCard(lang, wid) {
   const C = UI.common;
   const url = P(lang, `/workshops/${w.slug}/`);
   return `<article class="workshop-card">
-  ${ph(lang === "ar" ? `الصورة قيد التجهيز — ${t(w.shortName, lang)}` : `PHOTO PENDING — QSC ${t(w.shortName, "en").toUpperCase()} WORKSHOP`)}
+  ${img(wid === "painting" ? IMAGES.workshopPainting : IMAGES.workshopMaintenance, lang === "ar" ? t(w.shortName, "ar") : `QSC ${t(w.shortName, "en")} workshop`, "")}
   <div class="workshop-body">
     <h3>${esc(t(w.name, lang))}</h3>
     <p>${esc(t(w.role, lang))}</p>
@@ -346,7 +360,11 @@ function homePage(lang) {
     areaServed: { "@type": "City", name: "Riyadh" }
   }, faqLd(homeFaqs)];
   const body = `
-<section class="hero hero--form"><div class="container">
+<section class="hero hero--form">
+<div class="hero-slides" aria-hidden="true">
+  ${IMAGES.heroSlides.map((f, i) => `<div class="hero-slide${i === 0 ? " active" : ""}"><img src="${IMG_BASE}${f}" alt=""${i === 0 ? "" : ' loading="lazy"'} decoding="async"></div>`).join("")}
+</div>
+<div class="container">
   <div>
     <span class="eyebrow">QSC AUTOMOTIVE · ${ar ? "الرياض" : "RIYADH"}</span>
     <h1>${ar ? "عناية دقيقة بسيارتك الاستثنائية." : "Precision Care for Exceptional Cars."}</h1>
@@ -372,7 +390,7 @@ function homePage(lang) {
     : "Each need has its own dedicated facility at its own location: mechanical and technical care at the maintenance workshop, and paint & body at the Fast Painting facility. That separation is not an organizational detail — dust is the enemy of paint, paint has no place near mechanical work, and each team masters its craft because it does nothing else."}</p>
   <div class="grid grid--2">
     <article class="choice">
-      <div class="choice-media">${ph(ar ? "الصورة قيد التجهيز — ورشة الصيانة" : "PHOTO PENDING — QSC MAINTENANCE HERO")}</div>
+      <div class="choice-media">${img(IMAGES.choiceMaintenance, ar ? "ورشة QSC للصيانة" : "QSC maintenance workshop", "")}</div>
       <div class="choice-body">
         <span class="choice-num">01</span>
         <span class="eyebrow">${ar ? "الصيانة" : "MAINTENANCE"}</span>
@@ -384,7 +402,7 @@ function homePage(lang) {
       </div>
     </article>
     <article class="choice">
-      <div class="choice-media">${ph(ar ? "الصورة قيد التجهيز — ورشة الدهان" : "PHOTO PENDING — QSC PAINTING HERO")}</div>
+      <div class="choice-media">${img(IMAGES.choicePainting, ar ? "ورشة QSC للدهان والسمكرة" : "QSC painting & bodywork workshop", "")}</div>
       <div class="choice-body">
         <span class="choice-num">02</span>
         <span class="eyebrow">${ar ? "الدهان والسمكرة" : "PAINTING & BODYWORK"}</span>
@@ -417,8 +435,11 @@ function homePage(lang) {
   <span class="eyebrow">${ar ? "ماركات السيارات" : "VEHICLE BRANDS"}</span>
   <h2>${ar ? "عناية متخصصة بعلامات السيارات الفاخرة" : "Specialist care across luxury marques"}</h2>
   <p class="lead">${t(C.independentNote, lang)}</p>
-  <div class="brand-grid">
-    ${brands.map(b => `<a class="brand-chip" href="${P(lang, `/car-brands/${b.slug}/`)}">${esc(t(b.name, lang))}</a>`).join("")}
+</div>
+${brandMarquee(lang)}
+<div class="container">
+  <div class="actions" style="justify-content:center">
+    <a class="btn btn--ghost" href="${P(lang, "/car-brands/")}">${ar ? "جميع الماركات (16) ←" : "All 16 brands →"}</a>
   </div>
 </div></section>
 
@@ -482,7 +503,7 @@ function pillarPage(lang, branch) {
       ? "تتعامل ورشة الصيانة مع السيارة الفاخرة كمنظومة هندسية لا كقائمة قطع. كل زيارة تبدأ بالتشخيص — قراءة أنظمة السيارة، والتحقق الفعلي من كل نتيجة، وتجربة طريق تعيد إنتاج الشكوى — وتنتهي بتقرير مكتوب ونطاق عمل لا يُنفَّذ إلا بموافقتك. خمس عشرة خدمة متخصصة تغطي الميكانيكا والكهرباء والفحص الحاسوبي والتعليق والعناية الدورية، وكلها مضبوطة على ظروف الرياض: الحرارة التي تجهد التبريد والتكييف، والغبار الذي يبلي التعليق، والزحام الذي يشيخ ناقل الحركة."
       : "The maintenance workshop treats a luxury car as an engineered system, not a parts list. Every visit begins with diagnosis — reading the car's systems, physically verifying each finding, and road-testing to reproduce the complaint — and ends with a written report and a scope of work that proceeds only on your approval. Fifteen specialist services cover mechanical, electrical, diagnostics, suspension and scheduled care, all tuned to Riyadh's conditions: the heat that strains cooling and AC, the dust that wears suspension, and the traffic that ages transmissions.");
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
   <span class="eyebrow">${isPaint ? (ar ? "ورشة الدهان والسمكرة — الدهان السريع" : "PAINTING & BODYWORK — FAST PAINTING FACILITY") : (ar ? "ورشة الصيانة" : "MAINTENANCE WORKSHOP")}</span>
   <h1>${isPaint ? (ar ? "الدهان والسمكرة بمعيار السيارة الفاخرة" : "Painting & bodywork to a luxury standard") : (ar ? "صيانة هندسية للسيارات الفاخرة" : "Engineering-led care for luxury vehicles")}</h1>
   <p>${isPaint
@@ -504,7 +525,7 @@ ${breadcrumbs(lang, trail)}
       <span class="eyebrow">${ar ? "الموقع" : "THE FACILITY"}</span>
       <h2>${esc(t(w.name, lang))}</h2>
       <p class="lead">${esc(t(w.role, lang))}</p>
-      ${ph(ar ? `الصورة قيد التجهيز — ${t(w.shortName, lang)}` : `PHOTO PENDING — ${t(w.shortName, "en").toUpperCase()} FACILITY`, "")}
+      ${img(isPaint ? IMAGES.pillarPainting : IMAGES.pillarMaintenance, ar ? t(w.shortName, "ar") : `${t(w.shortName, "en")} facility`)}
       <div class="actions">
         <a class="btn btn--dark" href="${P(lang, `/workshops/${w.slug}/`)}">${t(UI.common.viewWorkshop, lang)}</a>
       </div>
@@ -556,7 +577,7 @@ function servicePage(lang, s) {
     ? "التسعير في QSC يتبع الفحص لا يسبقه: تستلم بعد التقييم نطاق العمل المقترح وتكلفته للموافقة، ولا يُنفَّذ إلا ما وافقت عليه. أما المدة فتُقدَّر بواقعية لكل عمل بعينه — ولا ننشر وعودًا معممة لا نستطيع الوفاء بها لكل حالة."
     : "Pricing at QSC follows the assessment, never precedes it: after evaluation you receive the proposed scope and its cost for approval, and only what you approve is carried out. Durations are estimated realistically per job — we publish no blanket promises we could not keep for every case.";
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
   <span class="eyebrow">${isPaint ? (ar ? "الدهان والسمكرة" : "PAINTING & BODYWORK") : (ar ? "الصيانة" : "MAINTENANCE")} · ${t(UI.categories[s.category], lang)}</span>
   <h1>${esc(t(s.name, lang))}${ar ? " في الرياض" : " in Riyadh"}</h1>
   <p>${esc(t(s.metaDesc, lang))}</p>
@@ -566,7 +587,7 @@ ${breadcrumbs(lang, trail)}
   <div class="prose deep">
     <p class="lead">${esc(t(s.intro, lang))}</p>
     ${extra ? extra.detail.map(d => `<p>${esc(d)}</p>`).join("") : ""}
-    ${ph(ar ? `الصورة قيد التجهيز — ${t(s.name, lang)}` : `PHOTO PENDING — ${t(s.name, "en").toUpperCase()}`, "ph--light")}
+    ${img(IMAGES.service[s.category] || IMAGES.pageHero, t(s.name, lang))}
     <h2 style="margin-top:40px">${t(UI.common.whoNeeds, lang)}</h2>
     <hr class="rule">
     <ul style="margin-top:18px">${t(s.symptoms, lang).map(x => `<li>${esc(x)}</li>`).join("")}</ul>
@@ -615,7 +636,7 @@ function brandsHub(lang) {
     : "From Mercedes-Benz, BMW and Porsche to Ferrari and Rolls-Royce: QSC's independent services for 16 luxury marques in Riyadh — maintenance, painting and bodywork.";
   const hubFaqs = t(pageFaqs.brandsHub, lang);
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
   <span class="eyebrow">${ar ? "دليل الماركات" : "BRAND DIRECTORY"}</span>
   <h1>${ar ? "ابدأ من ماركة سيارتك" : "Start from your car's marque"}</h1>
   <p>${ar
@@ -626,6 +647,7 @@ ${breadcrumbs(lang, trail)}
 <section class="section section--tight"><div class="container">
   <div class="grid grid--4">
     ${brands.map(b => `<article class="card">
+      <div class="brand-card-logo">${logoImg(b.slug, t(b.name, "en"))}</div>
       <h3><a href="${P(lang, `/car-brands/${b.slug}/`)}" style="color:inherit">${esc(t(b.name, lang))}</a></h3>
       <p>${esc(t(b.intro, lang).split(/(?<=[.؟!،—])\s/).slice(0, 1).join(" ")).slice(0, 170)}…</p>
       <a class="card-link" href="${P(lang, `/car-brands/${b.slug}/`)}">${t(UI.common.learnMore, lang)} ${ar ? "←" : "→"}</a>
@@ -643,11 +665,12 @@ ${breadcrumbs(lang, trail)}
       : "You will notice the pages' frankness: where our depth is real we say so, and where the manufacturer is the right answer — as for certain Bugatti and Pagani work — we say that too. The trust built by honesty on one page serves you across the whole car."}</p>
   </div>
 </div></section>
+${brandMarquee(lang)}
 ${faqBlock(lang, hubFaqs, { cloud: true })}`;
   return page(lang, { title, desc, pathname, navCurrent: pathname, jsonld: [breadcrumbLd(trail), faqLd(hubFaqs)] }, body, { pageType: "brands-hub" });
 }
 
-function brandPage(lang, b) {
+function brandPage(lang, b, bIndex = 0) {
   const ar = lang === "ar";
   const pathname = P(lang, `/car-brands/${b.slug}/`);
   const trail = [
@@ -668,7 +691,8 @@ function brandPage(lang, b) {
     ];
   const faqs = [...t(b.faq, lang), ...genericFaqs];
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
+  <div class="brand-hero-logo">${logoImg(b.slug, t(b.name, "en"), false)}</div>
   <span class="eyebrow">${ar ? "ماركة السيارة" : "VEHICLE BRAND"}</span>
   <h1>${ar ? `خدمات ${t(b.name, "ar")} في الرياض` : `${t(b.name, "en")} services in Riyadh`}</h1>
   <p>${esc(t(b.metaDesc, lang))}</p>
@@ -677,7 +701,7 @@ ${breadcrumbs(lang, trail)}
 <section class="section section--tight"><div class="container prose deep">
   <p class="lead">${esc(t(b.intro, lang))}</p>
   ${brandsExtra[b.slug] ? `<p>${esc(brandsExtra[b.slug][lang])}</p>` : ""}
-  ${ph(ar ? `الصورة قيد التجهيز — أعمال ${t(b.name, lang)}` : `PHOTO PENDING — ${t(b.name, "en").toUpperCase()} WORK AT QSC`, "ph--light")}
+  ${img(IMAGES.brandPage[bIndex % IMAGES.brandPage.length], ar ? `أعمال ${t(b.name, "ar")} في QSC` : `${t(b.name, "en")} work at QSC`)}
   <div class="notice notice--muted">${t(UI.common.independentNote, lang)}</div>
 </div></section>
 <section class="section section--cloud"><div class="container">
@@ -716,7 +740,7 @@ function workshopsHub(lang) {
     : "Two dedicated facilities at two separate Riyadh addresses: the mechanical & technical maintenance workshop, and the painting & bodywork (Fast Painting) workshop. Find each location, directions and booking.";
   const wsFaqs = t(pageFaqs.workshops, lang);
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
   <span class="eyebrow">${ar ? "منشآتنا" : "OUR FACILITIES"}</span>
   <h1>${ar ? "ورشتان متخصصتان، معيار QSC واحد" : "Two specialist workshops, one QSC standard"}</h1>
   <p>${ar
@@ -776,7 +800,7 @@ function workshopPage(lang, wid) {
     faqLd(wsFaqs)
   ];
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
   <span class="eyebrow">${ar ? "ملف الورشة" : "WORKSHOP PROFILE"}</span>
   <h1>${esc(t(w.name, lang))}</h1>
   <p>${esc(t(w.role, lang))}</p>
@@ -784,7 +808,7 @@ function workshopPage(lang, wid) {
 ${breadcrumbs(lang, trail)}
 <section class="section section--tight"><div class="container split">
   <div>
-    ${ph(ar ? `الصورة قيد التجهيز — ${t(w.shortName, lang)}` : `PHOTO PENDING — QSC ${t(w.shortName, "en").toUpperCase()} EXTERIOR`)}
+    ${img(isPaint ? IMAGES.choicePainting : IMAGES.choiceMaintenance, ar ? t(w.shortName, "ar") : `QSC ${t(w.shortName, "en")} workshop`)}
     <h2 style="margin-top:36px">${ar ? "ماذا يحدث هنا" : "What happens here"}</h2>
     <p class="lead">${isPaint
       ? (ar ? "هذه هي منشأة QSC الثانية، المكرسة بالكامل للدهان والسمكرة، وتعمل باسم «الدهان السريع». كل أعمال الدهان وإصلاح الهيكل ومطابقة الألوان وقياس الشاصي تُنفَّذ هنا — وتبدأ غالبًا بتقييم من الصور." : "This is QSC's second facility, wholly dedicated to paint and body and operating as the Fast Painting workshop. All painting, body repair, color matching and chassis measurement happens here — usually starting with a photo assessment.")
@@ -835,7 +859,7 @@ function serviceAreasHub(lang) {
     : "QSC serves customers from its two Riyadh facilities. See the service area and how vehicle pickup from outside the city works — confirmed individually per case.";
   const saFaqs = t(pageFaqs.serviceAreas, lang);
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
   <span class="eyebrow">${ar ? "نطاق الخدمة" : "SERVICE COVERAGE"}</span>
   <h1>${ar ? "أين تخدم QSC عملاءها؟" : "Where QSC serves its customers"}</h1>
   <p>${ar
@@ -887,7 +911,7 @@ function riyadhPage(lang) {
     : "QSC in Riyadh: a dedicated maintenance workshop and a separate painting & bodywork facility for luxury vehicles. 26 services, 16 supported marques, three booking channels.";
   const saFaqs = t(pageFaqs.serviceAreas, lang);
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
   <span class="eyebrow">${ar ? "منطقة الخدمة" : "SERVICE AREA"}</span>
   <h1>${ar ? "QSC في الرياض" : "QSC in Riyadh"}</h1>
   <p>${ar
@@ -931,7 +955,7 @@ function aboutPage(lang) {
     : "QSC Automotive: a Saudi specialist in luxury-vehicle care operating two Riyadh facilities — dedicated maintenance, and painting & bodywork. Our approach, in plain terms.";
   const aboutFaqs = t(pageFaqs.about, lang);
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
   <span class="eyebrow">${ar ? "من نحن" : "ABOUT QSC"}</span>
   <h1>${ar ? "عناية بالسيارات مبنية على التخصص" : "Automotive care built on specialization"}</h1>
   <p>${ar
@@ -946,7 +970,7 @@ ${breadcrumbs(lang, trail)}
   <p>${ar
     ? "الورشة الأولى مكرسة للصيانة الميكانيكية والكهربائية والفحص الحاسوبي، والثانية — ورشة الدهان السريع — مكرسة بالكامل للدهان والسمكرة. هذا الفصل ليس تفصيلًا تنظيميًا: الغبار عدو الدهان، والدهان لا مكان له قرب أعمال الميكانيكا، وكل فريق يتقن مجاله لأنه لا يفعل سواه."
     : "The first workshop is dedicated to mechanical and electrical maintenance and diagnostics; the second — the Fast Painting workshop — entirely to paint and body. That separation is not an organizational detail: dust is the enemy of paint, paint has no place near mechanical work, and each team masters its craft because it does nothing else."}</p>
-  ${ph(ar ? "الصورة قيد التجهيز — فريق ومنشآت QSC" : "PHOTO PENDING — QSC TEAM & FACILITIES", "ph--light")}
+  ${img(IMAGES.about, ar ? "منشآت QSC" : "QSC facilities")}
   <p>${ar
     ? "تمتد منشآت QSC على 4,500 متر مربع ويعمل فيها 400 فني متخصص يخدمون نحو 50 مركبة يوميًا — أرقام على مستوى الشركة نعرضها كما نشرتها QSC. لكن الرقم الذي نقيس به أنفسنا فعلًا مختلف: كم عميلًا غادر وهو يفهم بالضبط ما حدث لسيارته ولماذا. فالسيارة الفاخرة استثمار وعلاقة معًا، والورشة التي تستحقها هي التي تعاملها كذلك — بقطع مطابقة للمواصفات، وقرارات مبنية على القياس لا التخمين، وفاتورة تحكي قصة العمل كاملة."
     : "QSC's facilities span 4,500 square metres, staffed by 400 expert technicians serving around 50 vehicles daily — company-wide figures, shown as QSC publishes them. But the number we actually measure ourselves by is different: how many customers leave understanding exactly what happened to their car and why. A luxury vehicle is an investment and a relationship at once, and the workshop it deserves treats it as both — with specification-matched parts, decisions built on measurement rather than guesswork, and an invoice that tells the complete story of the work."}</p>
@@ -989,7 +1013,7 @@ function contactPage(lang) {
     : "Reach QSC in Riyadh: phone, WhatsApp, email and two workshops — maintenance, and painting & bodywork. Choose the right workshop for your need and book.";
   const cFaqs = t(pageFaqs.contact, lang);
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
   <span class="eyebrow">${ar ? "التواصل والمواقع" : "CONTACT & LOCATIONS"}</span>
   <h1>${ar ? "تواصل مع QSC" : "Contact QSC Automotive"}</h1>
   <p>${ar ? "أسرع طريق هو الهاتف؛ وللاستفسارات المفصلة استخدم نموذج الحجز أو البريد." : "The fastest route is the phone; for detailed inquiries use the booking form or email."}</p>
@@ -1047,7 +1071,7 @@ function bookingPage(lang) {
   const svcOptions = (branch) => services.filter(s => s.branch === branch)
     .map(s => `<option value="${s.slug}">${esc(t(s.name, lang))}</option>`).join("");
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
   <span class="eyebrow">${ar ? "طلب موعد" : "APPOINTMENT REQUEST"}</span>
   <h1>${ar ? "احجز موعدًا في الورشة" : "Request a workshop appointment"}</h1>
   <p>${ar
@@ -1169,7 +1193,7 @@ function guidesHub(lang) {
   const pathname = P(lang, "/guides/");
   const trail = [[P(lang, "/"), t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.guides, lang)]];
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
   <span class="eyebrow">${ar ? "أدلة ومعلومات" : "GUIDES & INSIGHTS"}</span>
   <h1>${ar ? "أدلة عملية من ورشة حقيقية" : "Practical guides from a real workshop"}</h1>
   <p>${ar
@@ -1195,7 +1219,7 @@ function projectsHub(lang) {
   const pathname = P(lang, "/projects/");
   const trail = [[P(lang, "/"), t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.projects, lang)]];
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
   <span class="eyebrow">${ar ? "أعمالنا" : "OUR WORK"}</span>
   <h1>${ar ? "مشاريع موثقة، بإذن أصحابها" : "Documented projects, with owners' consent"}</h1>
   <p>${ar
@@ -1224,7 +1248,7 @@ function privacyPage(lang) {
   const pathname = P(lang, "/privacy-policy/");
   const trail = [[P(lang, "/"), t(UI.common.breadcrumbHome, lang)], [null, t(UI.nav.privacy, lang)]];
   const body = `
-<section class="page-hero"><div class="container">
+<section class="page-hero">${pageHeroBg()}<div class="container">
   <h1>${ar ? "سياسة الخصوصية" : "Privacy Policy"}</h1>
   <p>${ar ? "كيف تتعامل QSC مع بياناتك عند التواصل والحجز." : "How QSC handles your details when you contact or book."}</p>
 </div></section>
@@ -1314,8 +1338,8 @@ for (const lang of LANGS) {
     indexable.push(serviceUrl(lang, s));
   }
   writePage(P(lang, "/car-brands/"), brandsHub(lang)); indexable.push(P(lang, "/car-brands/"));
-  for (const b of brands) {
-    writePage(P(lang, `/car-brands/${b.slug}/`), brandPage(lang, b));
+  for (const [bi, b] of brands.entries()) {
+    writePage(P(lang, `/car-brands/${b.slug}/`), brandPage(lang, b, bi));
     indexable.push(P(lang, `/car-brands/${b.slug}/`));
   }
   writePage(P(lang, "/workshops/"), workshopsHub(lang)); indexable.push(P(lang, "/workshops/"));

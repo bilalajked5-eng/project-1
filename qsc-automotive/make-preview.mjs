@@ -55,19 +55,10 @@ const shell = `<!doctype html>
   .bar button{background:#2178BF;border:0;color:#fff;border-radius:6px;padding:6px 12px;font-weight:700;cursor:pointer;font-size:12px}
   .bar button.alt{background:#2a3844}
   .bar .note{color:#68798a;margin-inline-start:auto}
-  iframe{border:0;width:100%;height:calc(100% - 41px);background:#fff;display:block}
+  iframe{border:0;width:100%;height:100%;background:#fff;display:block}
 </style>
 </head>
 <body>
-<div class="bar">
-  <strong>QSC PREVIEW</strong>
-  <button onclick="go('/')">⌂ Home (EN)</button>
-  
-  <button class="alt" onclick="go('/ar/')">AR الرئيسية</button>
-  <button class="alt" onclick="history.length&&back()">← Back</button>
-  <span class="route" id="route">/</span>
-  <span class="note">Single-file preview — asal site 116 alag HTML pages hai (dist/ folder)</span>
-</div>
 <iframe id="frame" title="QSC Automotive preview"></iframe>
 <script>
 var PAGES = ${J(pages)};
@@ -87,7 +78,6 @@ function render(route, q){
   html = html.replace('<script src="/assets/js/booking.js" defer></scr' + 'ipt>', "<script defer>" + JS3 + "</scr" + "ipt>");
   if(q){ html = html.replace("</head>", "<script>try{history.replaceState(null,'','?"+q+"')}catch(e){}<\\/script></head>"); }
   document.getElementById("frame").srcdoc = html;
-  document.getElementById("route").textContent = route;
   current = route;
 }
 function go(route, q){ if(current!==route){ stack.push(current); } render(route, q||""); }
